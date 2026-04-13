@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Music Widget</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, 'Segoe UI', Arial, sans-serif;
+            background: transparent;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .widget {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+            transition: background 1s ease;
+            overflow: hidden;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.4);
+        }
+
+        .widget.active { display: flex; }
+
+        /* ===== КОМПАКТНЫЙ (малая высота ≤ 150px) ===== */
+        .widget.compact .track-album { display: none; }
+        .widget.compact .timing { display: none; }
+        .widget.h.compact .track-title { font-size: calc(40vh); line-height: 1.45; }
+        .widget.h.compact .track-artist { font-size: calc(26vh); line-height: 1.5; margin-top: -0.2em}
+        .widget.v.compact .track-title { font-size: calc(28vh); line-height: 1.45; }
+        .widget.v.compact .track-artist { font-size: calc(20vh); line-height: 1.5; }
+        .widget.h.compact .state-btn { width: calc(38vh); height: calc(38vh); }
+        .widget.v.compact .state-btn { width: calc(30vh); height: calc(30vh); }
+
+        /* ===== ГОРИЗОНТАЛЬНЫЙ ===== */
+        .widget.h {
+            flex-direction: row;
+            align-items: stretch;
+        }
+
+        .widget.h .artwork-wrap {
+            width: 28%;
+            min-width: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .widget.h .track-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4px 80px 16px 16px;
+            min-width: 0;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .widget.h .controls {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+        }
+
+        .widget.h .timing {
+            font-size: calc(8vh);
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .widget.h .state-btn {
+            width: calc(35vh);
+            height: calc(35vh);
+        }
+
+        /* ===== ВЕРТИКАЛЬНЫЙ ===== */
+        .widget.v {
+            flex-direction: column;
+        }
+
+        .widget.v .artwork-wrap {
+            flex: none;
+            height: 50%;
+            max-height: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .widget.v .track-info {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 10px 16px 4px;
+            gap: 2px;
+        }
+
+        .widget.v .controls {
+            padding: 4px 16px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .widget.v .state-btn {
+            width: calc(10vh);
+            height: calc(10vh);
+        }
+
+        /* Прогресс-бар — внизу всего виджета, всегда 10px */
+        .progress-wrap {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+        }
+
+        .widget.h .progress-wrap {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .widget.v .progress-wrap {
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-1, #8b5cf6), var(--accent-2, #06b6d4));
+            transition: width 1s linear;
+        }
+
+        .progress-fill.paused { opacity: 0.35; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.97); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Обложка */
+        .artwork {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .artwork.visible { display: block; }
+
+        .artwork-bg {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .artwork-bg.hidden { display: none; }
+
+        .artwork-bg svg {
+            width: 40%;
+            height: 40%;
+            opacity: 0.15;
+            fill: rgba(255,255,255,0.6);
+        }
+
+        /* Текст */
+        .track-title-wrap,
+        .track-artist-wrap,
+        .track-album-wrap {
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .track-title-wrap .marquee-inner,
+        .track-artist-wrap .marquee-inner,
+        .track-album-wrap .marquee-inner {
+            display: inline-block;
+        }
+
+        .track-title-wrap .marquee-inner.active,
+        .track-artist-wrap .marquee-inner.active,
+        .track-album-wrap .marquee-inner.active {
+            animation: marquee var(--marquee-duration, 12s) linear 1 forwards;
+        }
+
+        .track-title-wrap .marquee-inner span,
+        .track-artist-wrap .marquee-inner span,
+        .track-album-wrap .marquee-inner span {
+            display: inline-block;
+            padding-right: 3em;
+        }
+
+        /* Анимация: бесконечная прокрутка влево */
+        @keyframes marquee {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .track-title {
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-bottom: 0.08em;
+        }
+
+        .widget.h .track-title { font-size: calc(22vh); line-height: 1.45; margin-bottom: 0; }
+        .widget.v .track-title { font-size: calc(12vh); line-height: 1.45; }
+
+        .track-artist {
+            font-weight: 500;
+            color: rgba(255,255,255,0.7);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .widget.h .track-artist { font-size: calc(14vh); line-height: 1.45; margin-bottom: 2px; }
+        .widget.v .track-artist { font-size: calc(7vh); line-height: 1.45; margin-bottom: 4px; }
+
+        .timing {
+            color: rgba(255,255,255,0.5);
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+
+        .widget.h .timing { font-size: calc(14vh); line-height: 1.45; margin-top: -0.2em}
+        .widget.v .timing { font-size: calc(3vh); line-height: 1.45; margin-top: -0.2em}
+
+        .track-album {
+            color: rgba(255,255,255,0.35);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.35;
+        }
+
+        .widget.h .track-album { font-size: calc(14vh); margin-top: -0.2em; margin-bottom: 2px;}
+        .widget.v .track-album { font-size: calc(4vh); margin-top: -0.2em; margin-bottom: 2px;}
+
+        /* Кнопка play/pause */
+        .state-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .state-btn:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .state-btn svg {
+            width: 45%;
+            height: 45%;
+        }
+
+        /* Пустое состояние */
+        .no-music {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(12,12,20,0.97), rgba(28,18,48,0.93));
+        }
+
+        .no-music.active { display: flex; }
+
+        .no-music-text {
+            font-size: calc(3vh);
+            color: rgba(255,255,255,0.25);
+        }
+
+        #colorAnalyzer { display: none; }
+    </style>
+</head>
+<body>
+    <canvas id="colorAnalyzer" width="10" height="10"></canvas>
+
+    <div class="widget" id="widget">
+        <div class="artwork-wrap">
+            <img class="artwork" id="artwork" alt="" crossorigin="anonymous">
+            <div class="artwork-bg" id="artwork-bg">
+                <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+            </div>
+        </div>
+
+        <div class="track-info">
+            <div class="track-title-wrap"><div class="track-title"><div class="marquee-inner" id="title"></div></div></div>
+            <div class="track-artist-wrap"><div class="track-artist"><div class="marquee-inner" id="artist"></div></div></div>
+            <div class="track-album-wrap"><div class="track-album"><div class="marquee-inner" id="album"></div></div></div>
+            <div class="timing" id="timing"></div>
+        </div>
+
+        <div class="controls">
+            <div class="state-btn" id="state-btn"></div>
+        </div>
+
+        <div class="progress-wrap"><div class="progress-fill" id="progress"></div></div>
+    </div>
+
+    <div class="no-music" id="no-music">
+        <div class="no-music-text">Нет воспроизведения</div>
+    </div>
+
+    <script>
+        const SERVER_URL = 'http://127.0.0.1:9876';
+        let lastKey = '';
+        let isPaused = false;
+        let duration = 0;
+        let syncId = null;
+
+        const MOCK_DATA = new URLSearchParams(location.search).get('mock') ? {
+            title: 'Blinding Lights',
+            artist: 'The Weeknd',
+            album: 'After Hours',
+            thumbnail: '',
+            state: 'playing',
+            currentTime: 138,
+            duration: 200,
+            ts: Date.now()
+        } : null;
+
+        const $ = id => document.getElementById(id);
+        const widget = $('widget');
+        const noMusic = $('no-music');
+        const artwork = $('artwork');
+        const artworkBg = $('artwork-bg');
+        const titleEl = $('title');
+        const artistEl = $('artist');
+        const albumEl = $('album');
+        const timingEl = $('timing');
+        const stateBtn = $('state-btn');
+        const progressFill = $('progress');
+        const colorCanvas = $('colorAnalyzer');
+
+        const SVG_PLAY = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7,4 20,12 7,20"/></svg>`;
+        const SVG_PAUSE = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`;
+
+        function orient() {
+            const h = window.innerHeight;
+            const w = window.innerWidth;
+            widget.classList.remove('h', 'v', 'compact');
+            if (h >= w) {
+                widget.classList.add('v');
+            } else {
+                widget.classList.add('h');
+            }
+            if (h <= 155) widget.classList.add('compact');
+        }
+
+        function fmt(s) {
+            s = Math.max(0, Math.floor(s));
+            return Math.floor(s/60) + ':' + (s%60).toString().padStart(2,'0');
+        }
+
+        function colors(img) {
+            const c = colorCanvas.getContext('2d');
+            colorCanvas.width = 8; colorCanvas.height = 8;
+            c.drawImage(img, 0, 0, 8, 8);
+            const d = c.getImageData(0, 0, 8, 8).data;
+            const p = [];
+            for (let i = 0; i < d.length; i += 4) p.push([d[i], d[i+1], d[i+2]]);
+            p.sort((a,b) => (a[0]+a[1]+a[2]) - (b[0]+b[1]+b[2]));
+            return { dark: p[Math.floor(p.length*0.1)], light: p[Math.floor(p.length*0.7)] };
+        }
+
+        function applyColors(d, l) {
+            const da = (d[0]+d[1]+d[2])/3;
+            if (da > 90) d = d.map(v => Math.max(v*0.25, 8)|0);
+            widget.style.background = `linear-gradient(135deg, rgba(${d[0]},${d[1]},${d[2]},0.96), rgba(${Math.min(d[0]+55,255)},${Math.min(d[1]+55,255)},${Math.min(d[2]+55,255)},0.92))`;
+            const b = (l[0]*299+l[1]*587+l[2]*114)/1000;
+            const a = b < 80 ? l.map(v => Math.min(v+120,255)) : l;
+            widget.style.setProperty('--accent-1', `rgb(${a[0]},${a[1]},${a[2]})`);
+            widget.style.setProperty('--accent-2', `rgb(${Math.min(a[0]+40,255)},${Math.min(a[1]+40,255)},${Math.min(a[2]+40,255)})`);
+        }
+
+        function resetColors() {
+            widget.style.background = 'linear-gradient(135deg, rgba(12,12,20,0.97), rgba(28,18,48,0.93))';
+            widget.style.setProperty('--accent-1', '#8b5cf6');
+            widget.style.setProperty('--accent-2', '#06b6d4');
+        }
+
+        function tick(adj, dur) {
+            if (syncId) clearInterval(syncId);
+            let bt = adj, ts = Date.now();
+            syncId = setInterval(() => {
+                const cur = bt + (Date.now() - ts) / 1000;
+                if (cur >= dur) { bt = 0; ts = Date.now(); }
+                const t = fmt(cur) + ' / ' + fmt(dur);
+                timingEl.textContent = t;
+                progressFill.style.width = Math.min(cur/dur*100, 100) + '%';
+            }, 1000);
+        }
+
+        let marqueeQueue = [];
+        let marqueeRunning = false;
+        let marqueeAbort = false;
+        let marqueeStarted = false;
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        function setMarqueeText(el, text) {
+            if (!text) { el.classList.remove('active'); el.innerHTML = ''; return; }
+            el.classList.remove('active');
+            el.innerHTML = `<span>${text}</span>`;
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const wrap = el.closest('.track-title-wrap, .track-artist-wrap, .track-album-wrap');
+                    if (!wrap) return;
+                    const cw = wrap.clientWidth;
+                    el.innerHTML = `<span>${text}</span>`;
+                    const tw = el.scrollWidth;
+                    if (tw > cw + 2) {
+                        el.innerHTML = `<span>${text}</span><span>${text}</span>`;
+                        const dur = (tw / 90) * 1000;
+                        el.style.setProperty('--marquee-duration', (dur / 1000) + 's');
+                        // Не добавляем повторно
+                        if (!marqueeQueue.find(q => q.el === el)) {
+                            marqueeQueue.push({ el, dur });
+                        }
+                    }
+                });
+            });
+        }
+
+        function startMarquee() {
+            if (marqueeRunning || marqueeStarted || marqueeQueue.length === 0) return;
+            marqueeStarted = true;
+            marqueeCycle();
+        }
+
+        async function marqueeCycle() {
+            marqueeRunning = true;
+            marqueeAbort = false;
+
+            await sleep(5000);
+            if (marqueeAbort) { cleanupMq(); return; }
+
+            while (!marqueeAbort) {
+                for (const item of marqueeQueue) {
+                    if (marqueeAbort) break;
+                    await sleep(3000);
+                    if (marqueeAbort) break;
+                    item.el.classList.add('active');
+                    await sleep(item.dur + 500);
+                    if (marqueeAbort) break;
+                    item.el.classList.remove('active');
+                    item.el.style.transform = '';
+                    await sleep(1500);
+                }
+                if (marqueeAbort) break;
+                await sleep(5000);
+            }
+            cleanupMq();
+        }
+
+        function cleanupMq() {
+            marqueeQueue.forEach(item => { item.el.classList.remove('active'); item.el.style.transform = ''; });
+            marqueeQueue = [];
+            marqueeRunning = false;
+            marqueeAbort = false;
+            marqueeStarted = false;
+        }
+
+        function show(data) {
+            widget.classList.add('active');
+            noMusic.classList.remove('active');
+
+            // Сброс старой очереди
+            marqueeAbort = true;
+            setTimeout(() => {
+                cleanupMq();
+                marqueeAbort = false;
+                setMarqueeText(titleEl, data.title || '');
+                setMarqueeText(artistEl, data.artist || '');
+                setMarqueeText(albumEl, data.album || '');
+                setTimeout(() => startMarquee(), 200);
+            }, 50);
+            isPaused = data.state === 'paused';
+            stateBtn.innerHTML = isPaused ? SVG_PLAY : SVG_PAUSE;
+
+            if (data.thumbnail) {
+                artwork.src = data.thumbnail;
+                if (artwork.complete && artwork.naturalWidth > 0) {
+                    artwork.classList.add('visible');
+                    artworkBg.classList.add('hidden');
+                    try { const c = colors(artwork); applyColors(c.dark, c.light); } catch(e) {}
+                } else {
+                    artwork.onload = () => {
+                        artwork.classList.add('visible');
+                        artworkBg.classList.add('hidden');
+                        try { const c = colors(artwork); applyColors(c.dark, c.light); } catch(e) {}
+                    };
+                    artwork.onerror = () => {
+                        artwork.classList.remove('visible');
+                        artworkBg.classList.remove('hidden');
+                        resetColors();
+                    };
+                }
+            } else {
+                artwork.classList.remove('visible');
+                artworkBg.classList.remove('hidden');
+                resetColors();
+            }
+
+            progressFill.className = 'progress-fill' + (isPaused ? ' paused' : '');
+
+            if (syncId) clearInterval(syncId);
+
+            if (data.duration > 0) {
+                duration = data.duration;
+                const adj = data.currentTime + (Date.now() - (data.ts||Date.now())) / 1000;
+                const t = fmt(adj) + ' / ' + fmt(duration);
+                timingEl.textContent = t;
+                progressFill.style.width = Math.min(adj/duration*100, 100) + '%';
+                if (!isPaused) tick(adj, duration);
+            } else {
+                timingEl.textContent = '';
+                progressFill.style.width = '0%';
+            }
+        }
+
+        function hide() {
+            if (syncId) clearInterval(syncId);
+            widget.classList.remove('active');
+            noMusic.classList.add('active');
+        }
+
+        async function fetchTrack() {
+            try {
+                const r = await fetch(SERVER_URL + '/api/track', { signal: AbortSignal.timeout(2000) });
+                return await r.json();
+            } catch { return null; }
+        }
+
+        async function update() {
+            if (MOCK_DATA) {
+                const data = { ...MOCK_DATA, ts: Date.now() };
+                duration = data.duration;
+                const key = data.title + '|' + data.artist + '|' + data.state;
+                if (key !== lastKey) {
+                    lastKey = key;
+                    show(data);
+                } else {
+                    const adj = data.currentTime + (Date.now() - data.ts) / 1000;
+                    const t = fmt(adj) + ' / ' + fmt(data.duration);
+                    timingEl.textContent = t;
+                    progressFill.style.width = Math.min(adj/data.duration*100, 100) + '%';
+                }
+                return;
+            }
+
+            const data = await fetchTrack();
+            if (!data || !data.title) { hide(); return; }
+
+            const key = data.title + '|' + data.artist + '|' + data.state;
+            if (key !== lastKey) {
+                lastKey = key;
+                show(data);
+            } else {
+                const wasPaused = isPaused;
+                isPaused = data.state === 'paused';
+                if (wasPaused !== isPaused) {
+                    stateBtn.innerHTML = isPaused ? SVG_PLAY : SVG_PAUSE;
+                    progressFill.className = 'progress-fill' + (isPaused ? ' paused' : '');
+                }
+                if (syncId) clearInterval(syncId);
+                if (data.duration > 0 && duration > 0) {
+                    const adj = data.currentTime + (Date.now() - (data.ts||Date.now())) / 1000;
+                    const t = fmt(adj) + ' / ' + fmt(duration);
+                    timingEl.textContent = t;
+                    progressFill.style.width = Math.min(adj/duration*100, 100) + '%';
+                    if (!isPaused) tick(adj, duration);
+                }
+            }
+        }
+
+        orient();
+        window.addEventListener('resize', orient);
+
+        if (MOCK_DATA) {
+            duration = MOCK_DATA.duration;
+            show(MOCK_DATA);
+        }
+
+        update();
+        setInterval(update, 2000);
+    </script>
+</body>
+</html>

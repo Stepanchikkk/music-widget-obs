@@ -1,0 +1,21 @@
+# Dependencies (install with npm)
+node_modules/
+
+# Dev config
+.qwen/
+QWEN.md
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs & env
+*.log
+.env
