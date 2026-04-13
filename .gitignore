@@ -19,3 +19,7 @@ desktop.ini
 # Logs & env
 *.log
 .env
+
+# Playwright MCP dev deps (not part of project)
+package.json
+package-lock.json
