@@ -19,3 +19,13 @@ desktop.ini
 # Logs & env
 *.log
 .env
+
+# Server files (not part of extension)
+server.js
+package.json
+package-lock.json
+screenshots.js
+screenshots/
+stop.bat
+restart.bat
+launch.vbs
