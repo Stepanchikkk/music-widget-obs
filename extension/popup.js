@@ -46,7 +46,6 @@ async function checkStatus() {
         hintBox.style.display = 'none';
         markStep(1, true);
         markStep(2, false);
-        markStep(3, false);
         markStep(4, false);
       } else {
         statusDot.className = 'dot connected';
@@ -57,7 +56,6 @@ async function checkStatus() {
         hintBox.style.display = 'none';
         markStep(1, true);
         markStep(2, true);
-        markStep(3, true);
         markStep(4, true);
       }
     } else {
@@ -77,12 +75,12 @@ async function checkStatus() {
     markStep(1, false);
     markStep(2, false);
     markStep(3, false);
-    markStep(4, false);
   }
 }
 
 function markStep(num, done) {
   const el = document.getElementById('step' + num);
+  if (!el) return;
   if (done) el.classList.add('done');
   else el.classList.remove('done');
 }
