@@ -5,6 +5,9 @@ node_modules/
 .qwen/
 QWEN.md
 
+# Dev scripts
+screenshots.js
+
 # OS
 .DS_Store
 Thumbs.db

@@ -1,12 +1,24 @@
-// Background service worker — опрашивает все вкладки каждую секунду
+// Background service worker — опрашивает вкладки
 const API_URL = 'http://127.0.0.1:9876/api/update';
 let lastSentKey = '';
+let lastSource = '';  // hostname последнего играющего источника
+
+function getHostname(url) {
+  try { return new URL(url).hostname; } catch { return ''; }
+}
+
+// Определяем рекламу YouTube по title
+function isYTAd(url, msData) {
+  if (!msData) return false;
+  const t = (msData.title || '').toLowerCase();
+  return t.includes('реклама') || t.includes('advertisement') || t.includes('ad ') || t.startsWith('ad|');
+}
 
 function checkTab(tab) {
   return new Promise((resolve) => {
-    if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('edge://') || tab.url.startsWith('devtools://') || tab.url.startsWith('about:')) {
-      resolve(null);
-      return;
+    if (!tab.url) { resolve(null); return; }
+    if (tab.url.startsWith('chrome://') || tab.url.startsWith('edge://') || tab.url.startsWith('devtools://') || tab.url.startsWith('about:')) {
+      resolve(null); return;
     }
 
     chrome.scripting.executeScript({
@@ -46,23 +58,40 @@ function checkTab(tab) {
 async function poll() {
   try {
     const tabs = await chrome.tabs.query({});
-    let bestTrack = null;
+    let playingTrack = null;
+    let pausedTrack = null;
 
     for (const tab of tabs) {
       const result = await checkTab(tab);
       if (!result?.msData) continue;
 
       const data = result.msData;
-      if (data.state === 'playing' || !bestTrack) {
-        bestTrack = { data, timing: result.timing };
-        if (data.state === 'playing') break;
+      if (isYTAd(tab.url, data)) continue;
+
+      const source = getHostname(tab.url);
+
+      if (data.state === 'playing') {
+        playingTrack = { data, timing: result.timing, source };
+        break; // нашли играющий — дальше не ищем
+      }
+
+      // Запоминаем последний найденный paused (на случай если нужно fallback)
+      if (!pausedTrack && source === lastSource) {
+        pausedTrack = { data, timing: result.timing, source };
       }
     }
 
-    if (bestTrack) {
-      const key = bestTrack.data.title + bestTrack.data.state + (bestTrack.timing ? Math.floor(bestTrack.timing.currentTime) : '');
+    // Приоритет: playing > paused из lastSource > nothing
+    const bestTrack = playingTrack || pausedTrack;
 
-      // Шлём всегда если есть музыка (для синхронизации тайминга), но не spam'им если ничего не изменилось
+    if (bestTrack) {
+      // Обновляем lastSource если это playing
+      if (playingTrack) {
+        lastSource = playingTrack.source;
+      }
+
+      const key = bestTrack.data.title + '|' + bestTrack.data.artist + '|' + bestTrack.data.state;
+
       if (key !== lastSentKey) {
         lastSentKey = key;
         const payload = {
@@ -86,9 +115,9 @@ async function poll() {
         }).catch(() => {});
       }
     } else {
-      // Нет музыки
       if (lastSentKey !== 'no_music') {
         lastSentKey = 'no_music';
+        lastSource = '';
         fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -104,6 +133,6 @@ async function poll() {
 
 poll();
 
-chrome.runtime.onInstalled.addListener((details) => {
+chrome.runtime.onInstalled.addListener(() => {
   console.log('Music Widget Bridge v4.0 installed');
 });

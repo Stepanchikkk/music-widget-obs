@@ -429,10 +429,11 @@
             }, 1000);
         }
 
-        let marqueeQueue = [];
-        let marqueeRunning = false;
-        let marqueeAbort = false;
-        let marqueeStarted = false;
+        // ===== MARQUEE =====
+        let marqueeItems = [];    // [{el, text, dur}] — текущий набор
+        let marqueeActive = false; // цикл запущен
+        let marqueeAbort = false;  // прервать
+        let marqueeTimer = null;   // debounce запуска
 
         function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -446,38 +447,44 @@
                     const wrap = el.closest('.track-title-wrap, .track-artist-wrap, .track-album-wrap');
                     if (!wrap) return;
                     const cw = wrap.clientWidth;
-                    el.innerHTML = `<span>${text}</span>`;
-                    const tw = el.scrollWidth;
+                    const span = el.querySelector('span');
+                    const tw = span.getBoundingClientRect().width;
                     if (tw > cw + 2) {
                         el.innerHTML = `<span>${text}</span><span>${text}</span>`;
                         const dur = (tw / 90) * 1000;
                         el.style.setProperty('--marquee-duration', (dur / 1000) + 's');
-                        // Не добавляем повторно
-                        if (!marqueeQueue.find(q => q.el === el)) {
-                            marqueeQueue.push({ el, dur });
-                        }
+                        // Обновляем или добавляем
+                        const existing = marqueeItems.find(i => i.el === el);
+                        if (existing) { existing.text = text; existing.dur = dur; }
+                        else marqueeItems.push({ el, text, dur });
+                    } else {
+                        el.innerHTML = `<span>${text}</span>`;
                     }
                 });
             });
         }
 
-        function startMarquee() {
-            if (marqueeRunning || marqueeStarted || marqueeQueue.length === 0) return;
-            marqueeStarted = true;
-            marqueeCycle();
+        function scheduleMarquee() {
+            clearTimeout(marqueeTimer);
+            marqueeTimer = setTimeout(() => {
+                if (!marqueeActive && marqueeItems.length > 0) {
+                    marqueeActive = true;
+                    marqueeAbort = false;
+                    marqueeCycle();
+                }
+            }, 1000);
         }
 
         async function marqueeCycle() {
-            marqueeRunning = true;
-            marqueeAbort = false;
-
-            await sleep(5000);
+            await sleep(3500);
             if (marqueeAbort) { cleanupMq(); return; }
 
-            while (!marqueeAbort) {
-                for (const item of marqueeQueue) {
+            while (!marqueeAbort && marqueeItems.length > 0) {
+                // snapshot на начало раунда
+                const round = marqueeItems.filter(i => i.text);
+                for (const item of round) {
                     if (marqueeAbort) break;
-                    await sleep(3000);
+                    await sleep(2500);
                     if (marqueeAbort) break;
                     item.el.classList.add('active');
                     await sleep(item.dur + 500);
@@ -493,11 +500,12 @@
         }
 
         function cleanupMq() {
-            marqueeQueue.forEach(item => { item.el.classList.remove('active'); item.el.style.transform = ''; });
-            marqueeQueue = [];
-            marqueeRunning = false;
+            marqueeItems.forEach(item => { item.el.classList.remove('active'); item.el.style.transform = ''; });
+            marqueeItems = [];
+            marqueeActive = false;
             marqueeAbort = false;
-            marqueeStarted = false;
+            clearTimeout(marqueeTimer);
+            marqueeTimer = null;
         }
 
         function show(data) {
@@ -506,14 +514,11 @@
 
             // Сброс старой очереди
             marqueeAbort = true;
-            setTimeout(() => {
-                cleanupMq();
-                marqueeAbort = false;
-                setMarqueeText(titleEl, data.title || '');
-                setMarqueeText(artistEl, data.artist || '');
-                setMarqueeText(albumEl, data.album || '');
-                setTimeout(() => startMarquee(), 200);
-            }, 50);
+            cleanupMq();
+            setMarqueeText(titleEl, data.title || '');
+            setMarqueeText(artistEl, data.artist || '');
+            setMarqueeText(albumEl, data.album || '');
+            scheduleMarquee();
             isPaused = data.state === 'paused';
             stateBtn.innerHTML = isPaused ? SVG_PLAY : SVG_PAUSE;
 

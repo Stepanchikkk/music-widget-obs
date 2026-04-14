@@ -46,7 +46,6 @@
   }
   .track-artist { font-size: 11px; color: #999; }
 
-  /* Подсказка при неработающем сервере */
   .hint-box {
     padding: 12px 16px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -64,7 +63,6 @@
     font-size: 11px; color: #A29BFE;
   }
 
-  /* Шаги */
   .steps { padding: 12px 16px; }
   .steps-title {
     font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
@@ -86,7 +84,6 @@
     font-size: 11px; color: #A29BFE;
   }
 
-  /* Ссылка для OBS */
   .obs-link {
     padding: 10px 16px;
     border-top: 1px solid rgba(255,255,255,0.08);
@@ -163,25 +160,19 @@
     <div class="track-artist" id="trackArtist">—</div>
   </div>
 
-  <!-- Подсказки когда сервер не активен -->
   <div class="hint-box" id="hintBox" style="display:none;">
     <p id="hintText"></p>
   </div>
 
-  <!-- Шаги -->
   <div class="steps">
     <div class="steps-title">Как запустить</div>
     <div class="step" id="step1">
       <div class="step-num">1</div>
-      <div class="step-text">Запусти сервер: <code>launch.vbs</code> (в фоне, без окна)</div>
+      <div class="step-text">Запусти сервер: <code>music-widget-obs\launch.vbs</code> (<code>stop.bat</code> - остановить, <code>restart.bat</code> - перезапустить)</div>
     </div>
     <div class="step" id="step2">
       <div class="step-num">2</div>
       <div class="step-text">Включи <strong>музыку</strong> в браузере</div>
-    </div>
-    <div class="step" id="step3">
-      <div class="step-num">3</div>
-      <div class="step-text">Включи трек — расширение подхватит <code>mediaSession</code></div>
     </div>
     <div class="step" id="step4">
       <div class="step-num">4</div>
@@ -189,7 +180,6 @@
     </div>
   </div>
 
-  <!-- Ссылка для OBS -->
   <div class="obs-link">
     <label>Ссылка для OBS Browser Source</label>
     <div class="link-row">
