@@ -1,6 +1,9 @@
 # 🎵 Music Widget для OBS
 
 Виджет для OBS, показывающий текущий трек из браузера.
+<p align="center">
+  <img src="screenshots/preview.png" width="400" alt="Превью">
+</p>
 
 ## Как это работает
 
@@ -35,7 +38,7 @@ mediaSession + DOM slider                   http://127.0.0.1:9876/
 Расширение появится в браузере:
 
 <p align="center">
-  <img src="screenshots\extension-yandex.png" width="290" alt="Расширение в Яндекс.Браузере" style="display:inline-block; margin:0 5px;">
+  <img src="screenshots/extension-yandex.png" width="290" alt="Расширение в Яндекс.Браузере" style="display:inline-block; margin:0 5px;">
   <img src="screenshots/extension-opera.png" width="290" alt="Расширение в Opera" style="display:inline-block; margin:0 5px;">
 </p>
 
