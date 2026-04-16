@@ -201,6 +201,7 @@
         .track-artist-wrap .marquee-inner,
         .track-album-wrap .marquee-inner {
             display: inline-block;
+            will-change: transform;
         }
 
         .track-title-wrap .marquee-inner.active,
@@ -218,8 +219,8 @@
 
         /* Анимация: бесконечная прокрутка влево */
         @keyframes marquee {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            0%   { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
         }
 
         .track-title {
@@ -430,20 +431,21 @@
         }
 
         // ===== MARQUEE =====
-        let marqueeItems = [];    // [{el, text, dur}] — текущий набор
-        let marqueeActive = false; // цикл запущен
-        let marqueeAbort = false;  // прервать
-        let marqueeTimer = null;   // debounce запуска
+        let marqueeItems = [];
+        let marqueeGen = 0;        // счётчик поколений
+        let marqueeTimer = null;
 
         function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-        function setMarqueeText(el, text) {
+        function setMarqueeText(el, text, gen) {
+            if (gen !== marqueeGen) return; // игнорируем устаревшие вызовы
             if (!text) { el.classList.remove('active'); el.innerHTML = ''; return; }
             el.classList.remove('active');
             el.innerHTML = `<span>${text}</span>`;
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
+                    if (gen !== marqueeGen) return;
                     const wrap = el.closest('.track-title-wrap, .track-artist-wrap, .track-album-wrap');
                     if (!wrap) return;
                     const cw = wrap.clientWidth;
@@ -453,57 +455,48 @@
                         el.innerHTML = `<span>${text}</span><span>${text}</span>`;
                         const dur = (tw / 90) * 1000;
                         el.style.setProperty('--marquee-duration', (dur / 1000) + 's');
-                        // Обновляем или добавляем
                         const existing = marqueeItems.find(i => i.el === el);
                         if (existing) { existing.text = text; existing.dur = dur; }
                         else marqueeItems.push({ el, text, dur });
                     } else {
                         el.innerHTML = `<span>${text}</span>`;
+                        const idx = marqueeItems.findIndex(i => i.el === el);
+                        if (idx !== -1) marqueeItems.splice(idx, 1);
                     }
                 });
             });
         }
 
-        function scheduleMarquee() {
-            clearTimeout(marqueeTimer);
-            marqueeTimer = setTimeout(() => {
-                if (!marqueeActive && marqueeItems.length > 0) {
-                    marqueeActive = true;
-                    marqueeAbort = false;
-                    marqueeCycle();
-                }
-            }, 1000);
-        }
+        async function marqueeCycle(gen) {
+            if (gen !== marqueeGen) return;
 
-        async function marqueeCycle() {
             await sleep(3500);
-            if (marqueeAbort) { cleanupMq(); return; }
+            if (gen !== marqueeGen) return;
 
-            while (!marqueeAbort && marqueeItems.length > 0) {
-                // snapshot на начало раунда
-                const round = marqueeItems.filter(i => i.text);
-                for (const item of round) {
-                    if (marqueeAbort) break;
+            while (marqueeItems.length > 0) {
+                if (gen !== marqueeGen) return;
+
+                for (const item of marqueeItems) {
+                    if (gen !== marqueeGen) return;
                     await sleep(2500);
-                    if (marqueeAbort) break;
+                    if (gen !== marqueeGen) return;
+
                     item.el.classList.add('active');
                     await sleep(item.dur + 500);
-                    if (marqueeAbort) break;
+                    if (gen !== marqueeGen) return;
+
                     item.el.classList.remove('active');
-                    item.el.style.transform = '';
                     await sleep(1500);
                 }
-                if (marqueeAbort) break;
+
+                if (gen !== marqueeGen) return;
                 await sleep(5000);
             }
-            cleanupMq();
         }
 
         function cleanupMq() {
-            marqueeItems.forEach(item => { item.el.classList.remove('active'); item.el.style.transform = ''; });
+            marqueeItems.forEach(item => item.el.classList.remove('active'));
             marqueeItems = [];
-            marqueeActive = false;
-            marqueeAbort = false;
             clearTimeout(marqueeTimer);
             marqueeTimer = null;
         }
@@ -512,13 +505,21 @@
             widget.classList.add('active');
             noMusic.classList.remove('active');
 
-            // Сброс старой очереди
-            marqueeAbort = true;
+            marqueeGen++; // новый generation - все старые анимации будут остановлены
             cleanupMq();
-            setMarqueeText(titleEl, data.title || '');
-            setMarqueeText(artistEl, data.artist || '');
-            setMarqueeText(albumEl, data.album || '');
-            scheduleMarquee();
+            const gen = marqueeGen;
+
+            setMarqueeText(titleEl, data.title || '', gen);
+            setMarqueeText(artistEl, data.artist || '', gen);
+            setMarqueeText(albumEl, data.album || '', gen);
+
+            clearTimeout(marqueeTimer);
+            marqueeTimer = setTimeout(() => {
+                if (gen === marqueeGen && marqueeItems.length > 0) {
+                    marqueeCycle(gen);
+                }
+            }, 1200);
+
             isPaused = data.state === 'paused';
             stateBtn.innerHTML = isPaused ? SVG_PLAY : SVG_PAUSE;
 
