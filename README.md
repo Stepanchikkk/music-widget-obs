@@ -36,7 +36,7 @@ mediaSession + DOM slider                   http://127.0.0.1:9876/
 
 <p align="center">
   <img src="screenshots/extension-yandex.png" width="600" alt="Расширение в Яндекс.Браузере">
-  <br><br>
+  
   <img src="screenshots/extension-opera.png" width="600" alt="Расширение в Opera">
 </p>
 
