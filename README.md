@@ -22,7 +22,7 @@ mediaSession + DOM slider                   http://127.0.0.1:9876/
 ### 0. 📥 Скачать архив
 
 1. Перейдите по ссылке:  
-   🔗 [📦 Скачать music-widget-obs v4.0 (ZIP)](https://github.com/Stepanchikkk/music-widget-obs/releases/download/4.1/music-widget-obs-v4.1.zip)
+   🔗 [📦 Скачать music-widget-obs (ZIP)](https://github.com/Stepanchikkk/music-widget-obs/releases/download/4.1/music-widget-obs-v4.1.zip)
 2. Распакуйте архив в любом удобном месте
 3. Далее работайте внутри этой папки
 
