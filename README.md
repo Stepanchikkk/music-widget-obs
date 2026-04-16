@@ -35,9 +35,8 @@ mediaSession + DOM slider                   http://127.0.0.1:9876/
 Расширение появится в браузере:
 
 <p align="center">
-  <img src="screenshots/extension-yandex.png" width="600" alt="Расширение в Яндекс.Браузере">
-  
-  <img src="screenshots/extension-opera.png" width="600" alt="Расширение в Opera">
+  <img src="screenshots/extension-yandex.png" width="290" alt="Расширение в Яндекс.Браузере" style="display:inline-block; margin:0 5px;">
+  <img src="screenshots/extension-opera.png" width="290" alt="Расширение в Opera" style="display:inline-block; margin:0 5px;">
 </p>
 
 ---
