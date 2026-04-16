@@ -609,7 +609,9 @@
                 }
                 if (syncId) clearInterval(syncId);
                 if (data.duration > 0 && duration > 0) {
-                    const adj = data.currentTime + (Date.now() - (data.ts||Date.now())) / 1000;
+                    const adj = isPaused
+                        ? data.currentTime
+                        : data.currentTime + (Date.now() - (data.ts||Date.now())) / 1000;
                     const t = fmt(adj) + ' / ' + fmt(duration);
                     timingEl.textContent = t;
                     progressFill.style.width = Math.min(adj/duration*100, 100) + '%';
