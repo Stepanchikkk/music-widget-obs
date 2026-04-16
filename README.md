@@ -17,30 +17,29 @@ mediaSession + DOM slider                   http://127.0.0.1:9876/
 ### 0. 📥 Скачать архив
 
 1. Перейдите по ссылке:  
-   🔗 [📦 Скачать music-widget-obs v4.0 (ZIP)](https://github.com/Stepanchikkk/music-widget-obs/releases/latest)
+   🔗 [📦 Скачать music-widget-obs v4.0 (ZIP)](https://github.com/Stepanchikkk/music-widget-obs/releases/download/v4.0/music-widget-obs-v4.0.zip)
 2. Распакуйте архив в удобную папку, например:  
    - `C:\obs-widgets\music-widget-obs\` (Windows)  
    - `~/obs-widgets/music-widget-obs/` (macOS/Linux)
 3. Далее работайте внутри этой папки.
 
-### 1. Сервер
-
-Нужен **Node.js** (скачай с https://nodejs.org/).
-
-**Запуск:**
-- **`launch.vbs`** — двойной клик, сервер запустится **в фоне** без окна консоли
-- **`node server.js`** — запуск с логом в консоли (для отладки)
-
-**Управление:**
-- `stop.bat` — остановить сервер
-- `restart.bat` — перезапустить
-
-### 2. Расширение для браузера
+### 1. Расширение для браузера
 
 1. Открой `chrome://extensions/` (Chrome/Edge) или `opera://extensions/` (Opera)
 2. Включи **«Режим разработчика»** — переключатель в правом верхнем углу
 3. Нажми **«Загрузить распакованное»** (Load unpacked)
 4. Выбери папку `extension/` из проекта
+
+### 2. Сервер
+
+Для работы нужен  **Node.js**. Скачай и установи с https://nodejs.org/
+при установке оставить все параметры по умолчанию
+
+**Запуск:**
+В папке проекта лежат `launch.vbs`, `stop.bat` и `restart.bat`
+- **`launch.vbs`** — двойной клик, сервер запустится **в фоне** без окна консоли
+- **`stop.bat`** — остановить сервер
+- **`restart.bat`** — перезапустить
 
 ### 3. Виджет в OBS
 
