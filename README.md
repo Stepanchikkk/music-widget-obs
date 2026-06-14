@@ -80,14 +80,8 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 ![Горизонтальная ультраширокая](screenshots/horiz-ultra-wide.png)
 *Горизонтальная ультраширокая 1200×150*
 
-<span style="display:inline-block;text-align:center;margin:0 20px">
-  <img src="screenshots/vert-tall.png" alt="Вертикальная"><br>
-  <em>Вертикальная 280×450</em>
-</span>
-<span style="display:inline-block;text-align:center;margin:0 20px">
-  <img src="screenshots/square-big.png" alt="Квадратная"><br>
-  <em>Квадратная 400×400</em>
-</span>
+![Вертикальная](screenshots/vert-tall.png) ![Квадратная](screenshots/square-big.png)
+*Вертикальная 280×450* *Квадратная 400×400*
 
 </div>
 
