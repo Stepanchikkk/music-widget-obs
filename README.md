@@ -2,6 +2,8 @@
 
 Виджет для OBS, показывающий текущий трек из браузера.
 
+![Preview](screenshots/preview.png)
+
 ## Как это работает
 
 ```
@@ -12,7 +14,9 @@ mediaSession + DOM slider              Browser Source → widget.html
 
 Расширение каждую секунду опрашивает вкладки браузера, забирает данные из Media Session API и тайминг из DOM, и отправляет их через WebSocket в obs-websocket (встроен в OBS Studio). Виджет подключается к тому же WebSocket-серверу и получает данные в реальном времени.
 
-**Не требует Node.js, отдельного сервера или терминала.**
+Расширение поддерживает YouTube, Яндекс.Музыку, Spotify, SoundCloud и другие сайты с Media Session API.
+
+![Extension popup](screenshots/popup.png) ![Extension status](screenshots/popup-status.png)
 
 ---
 
@@ -25,28 +29,30 @@ mediaSession + DOM slider              Browser Source → widget.html
 3. Нажмите **Загрузить распакованное** (Load unpacked)
 4. Выберите папку `extension/` из архива
 
+![Load unpacked](screenshots/extension-yandex.png)
+
 ### 2. WebSocket сервер в OBS
 
 OBS Studio 28+ имеет встроенный WebSocket сервер:
 
-1. В OBS: **Tools** → **WebSocket Server Settings**
-2. Включите **Enable WebSocket server**
-3. По умолчанию порт **4455**, пароль не требуется
-4. Если хотите задать пароль — запомните его, он понадобится в расширении
+1. В OBS: **Tools** → **WebSocket Server Settings** (или **Сервис** → **Настройки сервера WebSocket**)
+2. Включите **Enable WebSocket server** (Включить сервер WebSocket)
+3. **Снимите галочку «Enable authentication» (Включить вход в аккаунт)**
+4. Порт **4455** (по умолчанию)
 
 Сервер запускается автоматически вместе с OBS.
 
+![WebSocket settings](screenshots/source-browser.png)
+
 ### 3. Виджет в OBS
 
-1. В OBS создайте источник **Browser Source**
-2. Выберите **Local File**
+1. В OBS создайте источник **Browser Source** (или **Браузер**)
+2. Выберите **Local File** (Локальный файл)
 3. Укажите путь к файлу `widget.html` из архива
 4. Ширина и высота — на ваш вкус (виджет подстраивается автоматически)
-5. Если в OBS WebSocket задан пароль, добавьте его в URL: `file:///.../widget.html?password=ваш_пароль`
+5. Поставьте галочку **Transparent** (Прозрачный фон)
 
-### 4. Настройка расширения (если нужно)
-
-В расширении можно указать порт и пароль WebSocket сервера (если они отличаются от стандартных). По умолчанию всё работает без дополнительной настройки.
+![Browser Source](screenshots/extension-opera.png)
 
 ---
 
@@ -62,6 +68,12 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 | **Высота > ширина** | Вертикальная (обложка сверху, текст снизу) |
 
 Меняйте ориентацию, просто изменяя размеры Browser Source в OBS.
+
+![Horizontal bar](screenshots/horiz-bar.png) ![Horizontal wide](screenshots/horiz-wide.png)
+
+![Horizontal ultra wide](screenshots/horiz-ultra-wide.png) ![Vertical tall](screenshots/vert-tall.png)
+
+![Square big](screenshots/square-big.png)
 
 ### Компактный режим
 
@@ -89,7 +101,7 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 Параметры URL для виджета:
 - `?mock=1` — демо-режим
 - `?port=xxxx` — нестандартный порт WebSocket
-- `?password=xxx` — пароль WebSocket сервера
+- `?lang=en` — английский язык заглушки
 
 ---
 
@@ -97,9 +109,8 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 | Проблема | Решение |
 |----------|---------|
-| Виджет пустой / показывает "Нет воспроизведения" | Проверьте, что в OBS включён WebSocket сервер (Tools → WebSocket Server Settings) |
-| Расширение не подключается | Откройте попап расширения — проверьте порт и пароль. Нажмите "Переподключиться" |
-| Расширение не видит музыку | В chrome://extensions/ → детали расширения → включите "Разрешить доступ к файлам" |
+| Виджет пустой / показывает «Нет воспроизведения» | Проверьте, что в OBS включён WebSocket сервер и снята галочка «Включить вход в аккаунт» |
+| Расширение не подключается | Откройте попап расширения — проверьте порт и статус подключения |
+| Расширение не видит музыку | В `chrome://extensions/` → детали расширения → включите «Разрешить доступ к файлам» |
 | Нет обложки / цветов | Некоторые сервисы не отдают обложку через Media Session API |
 | Белый фон вместо прозрачного | В свойствах Browser Source поставьте галочку **Прозрачный фон** (Transparent) |
-| Пароль не подходит | Убедитесь, что пароль в расширении и в URL виджета совпадает с паролем в OBS WebSocket Server Settings |
