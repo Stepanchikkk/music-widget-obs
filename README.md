@@ -1,4 +1,4 @@
-# Music Widget для OBS
+# Music Widget OBS
 
 Виджет для OBS, показывающий текущий трек из браузера.
 
