@@ -71,14 +71,29 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 <div align="center">
 
-| | |
-|---|---|
-| ![Горизонтальная панель](screenshots/horiz-bar.png) | ![Горизонтальная широкая](screenshots/horiz-wide.png) |
-| Горизонтальная 800×200 | Горизонтальная широкая 800×150 |
-| ![Горизонтальная ультраширокая](screenshots/horiz-ultra-wide.png) | ![Вертикальная](screenshots/vert-tall.png) |
-| Горизонтальная ультраширокая 1200×150 | Вертикальная 280×450 |
-| ![Квадратная](screenshots/square-big.png) |
-| Квадратная 400×400 |
+<p>
+  <img src="screenshots/horiz-bar.png" alt="Горизонтальная панель"><br>
+  <sub>Горизонтальная 800×200</sub>
+</p>
+
+<p>
+  <img src="screenshots/horiz-wide.png" alt="Горизонтальная широкая"><br>
+  <sub>Горизонтальная широкая 800×150</sub>
+</p>
+
+<p>
+  <img src="screenshots/horiz-ultra-wide.png" alt="Горизонтальная ультраширокая"><br>
+  <sub>Горизонтальная ультраширокая 1200×150</sub>
+</p>
+
+<span style="display:inline-block;margin:0 30px;text-align:center">
+  <img src="screenshots/vert-tall.png" alt="Вертикальная"><br>
+  <sub>Вертикальная 280×450</sub>
+</span>
+<span style="display:inline-block;margin:0 30px;text-align:center">
+  <img src="screenshots/square-big.png" alt="Квадратная"><br>
+  <sub>Квадратная 400×400</sub>
+</span>
 
 </div>
 
