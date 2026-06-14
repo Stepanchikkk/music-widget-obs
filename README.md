@@ -16,7 +16,7 @@ mediaSession + DOM slider              Browser Source → widget.html
 
 Расширение поддерживает YouTube, Яндекс.Музыку, Spotify, SoundCloud и другие сайты с Media Session API.
 
-<p align="center"><img src="screenshots/popup.png" alt="Extension popup"> <img src="screenshots/popup-status.png" alt="Extension status"></p>
+<p align="center"><img src="screenshots/popup_ru.png" alt="Попап на русском"> <img src="screenshots/popup_en.png" alt="Попап на английском"></p>
 
 ---
 
@@ -29,8 +29,6 @@ mediaSession + DOM slider              Browser Source → widget.html
 3. Нажмите **Загрузить распакованное** (Load unpacked)
 4. Выберите папку `extension/` из архива
 
-<p align="center"><img src="screenshots/extension-yandex.png" alt="Load unpacked"></p>
-
 ### 2. WebSocket сервер в OBS
 
 OBS Studio 28+ имеет встроенный WebSocket сервер:
@@ -42,7 +40,7 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 Сервер запускается автоматически вместе с OBS.
 
-<p align="center"><img src="screenshots/source-browser.png" alt="WebSocket settings"></p>
+<p align="center"><img src="screenshots/obs-services-menu.png" alt="Меню Services в OBS"> <img src="screenshots/obs-ws-settings.png" alt="Настройки WebSocket сервера"></p>
 
 ### 3. Виджет в OBS
 
@@ -52,7 +50,7 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 4. Ширина и высота — на ваш вкус (виджет подстраивается автоматически)
 5. Поставьте галочку **Transparent** (Прозрачный фон)
 
-<p align="center"><img src="screenshots/extension-opera.png" alt="Browser Source"></p>
+<p align="center"><img src="screenshots/source-browser.png" alt="Browser Source"></p>
 
 ---
 
