@@ -1,89 +1,94 @@
-// Popup — статус, подсказки, копирование ссылки
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
-const trackInfo = document.getElementById('trackInfo');
+const statusHint = document.getElementById('statusHint');
+const trackSection = document.getElementById('trackSection');
 const trackTitle = document.getElementById('trackTitle');
 const trackArtist = document.getElementById('trackArtist');
-const hintBox = document.getElementById('hintBox');
-const hintText = document.getElementById('hintText');
-const copyBtn = document.getElementById('copyBtn');
+const trackSource = document.getElementById('trackSource');
+const portInput = document.getElementById('portInput');
+const saveBtn = document.getElementById('saveBtn');
 
-const SERVER = 'http://127.0.0.1:9876';
+function updateStatus(status, alarm) {
+  if (status.connected) {
+    statusDot.className = 'dot connected';
+    if (status.track) {
+      statusText.innerHTML = 'WebSocket: подключен';
+      trackSection.style.display = 'block';
+      trackTitle.textContent = status.track.title || '\u2014';
+      trackArtist.textContent = status.track.artist || '\u2014';
+      trackSource.textContent = status.source || '';
+    } else {
+      statusText.innerHTML = 'WebSocket: подключен';
+      trackSection.style.display = 'none';
+    }
+    statusHint.textContent = '';
+  } else {
+    statusDot.className = 'dot disconnected';
+    statusText.innerHTML = 'WebSocket: не подключ\u00EBн';
+    trackSection.style.display = 'none';
 
-// Копирование ссылки
-copyBtn.addEventListener('click', async () => {
-  const url = document.getElementById('linkUrl').value;
-  try {
-    await navigator.clipboard.writeText(url);
-    copyBtn.textContent = 'Скопировано!';
-    copyBtn.classList.add('copied');
-    setTimeout(() => {
-      copyBtn.textContent = 'Копировать';
-      copyBtn.classList.remove('copied');
-    }, 2000);
-  } catch (e) {
-    const input = document.getElementById('linkUrl');
-    input.select();
-    document.execCommand('copy');
-    copyBtn.textContent = 'Скопировано!';
-    copyBtn.classList.add('copied');
-    setTimeout(() => {
-      copyBtn.textContent = 'Копировать';
-      copyBtn.classList.remove('copied');
-    }, 2000);
+    const d = status.debug;
+    let msg = d && d.error ? d.error : (status.reason || '');
+    if (msg === 'auth_required') msg = 'В OBS включён вход в аккаунт (аутентификация). Откройте Сервис → Настройки сервера WebSocket и снимите галочку "Включить вход в аккаунт"';
+    else if (msg === 'connection_error') msg = 'Не удалось подключиться к OBS. Убедитесь что OBS запущен и WebSocket сервер включён, проверьте порт (текущий: ' + (d ? d.port : '') + ')';
+    else if (msg === 'timeout') msg = 'OBS не отвечает. Убедитесь что OBS запущен и WebSocket сервер включён, проверьте порт (текущий: ' + (d ? d.port : '') + ')';
+    else if (msg === 'send_failed') msg = 'Ошибка отправки данных. Проверьте порт WebSocket сервера';
+    else if (msg.startsWith && msg.startsWith('close_')) msg = 'Соединение закрыто с кодом ' + msg.slice(6) + '. Проверьте порт (текущий: ' + (d ? d.port : '') + ') и что аутентификация выключена в настройках WebSocket сервера';
+    if (!msg) msg = 'Проверьте что OBS запущен и WebSocket сервер включён (Сервис → Настройки сервера WebSocket)';
+    if (alarm) {
+      const secs = Math.max(0, Math.round((alarm.scheduledTime - Date.now()) / 1000));
+      if (secs > 0) msg += ' • повтор через ' + secs + 'с';
+    }
+    statusHint.textContent = msg;
   }
-});
+
+  if (status.connected && !status.track && status.tabs !== undefined) {
+    if (status.tabs === 0) {
+      statusHint.textContent = 'Нет вкладок с медиа. Убедитесь что музыка играет через YouTube, Яндекс.Музыку или другой сервис с MediaSession API';
+    } else {
+      statusHint.textContent = 'Вкладок с медиа: ' + status.tabs + ', ожидание трека...';
+    }
+  }
+}
 
 async function checkStatus() {
   try {
-    const resp = await fetch(SERVER + '/api/track', { signal: AbortSignal.timeout(2000) });
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data.error) {
-        statusDot.className = 'dot waiting';
-        statusText.textContent = 'Сервер работает — ждём музыку...';
-        trackInfo.style.display = 'none';
-        hintBox.style.display = 'none';
-        markStep(1, true);
-        markStep(2, false);
-        markStep(4, false);
-      } else {
-        statusDot.className = 'dot connected';
-        statusText.textContent = 'Музыка играет';
-        trackInfo.style.display = 'block';
-        trackTitle.textContent = data.title || '—';
-        trackArtist.textContent = data.artist || '—';
-        hintBox.style.display = 'none';
-        markStep(1, true);
-        markStep(2, true);
-        markStep(4, true);
-      }
+    const [response, alarm] = await Promise.all([
+      chrome.runtime.sendMessage({ type: 'getStatus' }),
+      chrome.alarms.get('heartbeat')
+    ]);
+    if (response) {
+      updateStatus(response, alarm);
     } else {
-      throw new Error('not ok');
+      updateStatus({ connected: false, reason: 'error' }, alarm);
     }
   } catch (e) {
-    statusDot.className = 'dot error';
-    statusText.textContent = 'Сервер не запущен';
-    trackInfo.style.display = 'none';
-
-    hintBox.style.display = 'block';
-    hintText.innerHTML =
-      'Сервер не отвечает. Для запуска открой ' +
-      '<code>music-widget-obs\\launch.vbs</code><br>' +
-      'Перезапуск — <code>restart.bat</code>, остановка — <code>stop.bat</code>';
-
-    markStep(1, false);
-    markStep(2, false);
-    markStep(3, false);
+    updateStatus({ connected: false, reason: 'error' });
   }
 }
 
-function markStep(num, done) {
-  const el = document.getElementById('step' + num);
-  if (!el) return;
-  if (done) el.classList.add('done');
-  else el.classList.remove('done');
+function loadSettings() {
+  chrome.storage.local.get({ wsPort: '4455' }, (items) => {
+    portInput.value = items.wsPort;
+  });
 }
 
+function saveSettings() {
+  const port = portInput.value.trim() || '4455';
+  chrome.storage.local.set({ wsPort: port }, () => {
+    statusDot.className = 'dot connecting';
+    statusText.textContent = 'WebSocket: подключение...';
+    statusHint.textContent = '';
+    chrome.runtime.sendMessage({ type: 'reconnect', wsPort: port });
+  });
+}
+
+saveBtn.addEventListener('click', saveSettings);
+
+portInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') saveSettings();
+});
+
+loadSettings();
 checkStatus();
-setInterval(checkStatus, 3000);
+setInterval(checkStatus, 2000);

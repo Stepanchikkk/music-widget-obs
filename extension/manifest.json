@@ -1,15 +1,24 @@
 {
   "manifest_version": 3,
   "name": "Music Widget Bridge",
-  "version": "4.0",
-  "description": "Виджет музыки для OBS — показывает текущий трек из браузера",
+  "version": "5.0.0",
+  "description": "Отображает название и статус текущего трека в OBS. github.com/Stepanchikkk/music-widget-obs",
   "permissions": [
-    "tabs",
-    "scripting"
+    "storage",
+    "alarms",
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
-    "http://127.0.0.1:9876/*",
     "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
   ],
   "background": {
     "service_worker": "background.js"

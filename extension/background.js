@@ -1,138 +1,223 @@
-// Background service worker — опрашивает вкладки
-const API_URL = 'http://127.0.0.1:9876/api/update';
-let lastSentKey = '';
-let lastSource = '';  // hostname последнего играющего источника
+const DEFAULT_PORT = 4455;
+let ws = null;
+let wsAuthenticated = false;
+let wsConnecting = false;
+let lastError = '';
+let wsPort = DEFAULT_PORT;
+
+const tracks = new Map();
+const lastUpdate = new Map();
+let sentKey = '';
+let lastSource = '';
+let currentTrackData = null;
+
+function connect() {
+  if (wsConnecting) return;
+  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
+  wsConnecting = true;
+  lastError = '';
+
+  if (ws) { try { ws.close(); } catch (e) {} }
+
+  const sock = new WebSocket('ws://127.0.0.1:' + wsPort);
+  ws = sock;
+  wsAuthenticated = false;
+
+  sock.onopen = () => {};
+
+  sock.onmessage = async (event) => {
+    if (ws !== sock) return;
+    try {
+      const msg = JSON.parse(event.data);
+
+      if (msg.op === 0) {
+        const serverRpcVersion = msg.d.rpcVersion;
+        const identify = { op: 1, d: { rpcVersion: serverRpcVersion, eventSubscriptions: 0x7FFFFFFF } };
+
+        if (msg.d.authentication) {
+          lastError = 'auth_required';
+          sock.close();
+          if (ws === sock) { ws = null; wsConnecting = false; }
+          return;
+        }
+
+        try { sock.send(JSON.stringify(identify)); } catch (e) {
+          lastError = 'send_failed';
+          sock.close();
+          if (ws === sock) { ws = null; wsConnecting = false; }
+        }
+      } else if (msg.op === 2) {
+        wsAuthenticated = true;
+        wsConnecting = false;
+        sentKey = '';
+        pickAndSend();
+      }
+    } catch (e) {}
+  };
+
+  sock.onclose = (event) => {
+    if (ws !== sock) return;
+    ws = null;
+    wsAuthenticated = false;
+    wsConnecting = false;
+    if (event.code && event.code !== 1000 && event.code !== 1006) lastError = 'close_' + event.code;
+  };
+
+  sock.onerror = () => {
+    if (ws !== sock) return;
+    wsConnecting = false;
+    try { sock.close(); } catch (e) {}
+    ws = null;
+    wsAuthenticated = false;
+    lastError = 'connection_error';
+  };
+
+  setTimeout(() => {
+    if (ws === sock && ws.readyState === WebSocket.CONNECTING) {
+      lastError = 'timeout';
+      try { sock.close(); } catch (e) {}
+      if (ws === sock) { ws = null; wsAuthenticated = false; wsConnecting = false; }
+    }
+  }, 5000);
+}
+
+function send(data) {
+  if (!ws || ws.readyState !== WebSocket.OPEN || !wsAuthenticated) return;
+
+  try {
+    ws.send(JSON.stringify({
+      op: 6,
+      d: {
+        requestType: 'BroadcastCustomEvent',
+        requestId: '' + Date.now() + Math.random(),
+        requestData: { eventData: data }
+      }
+    }));
+  } catch (e) {}
+}
+
+function pickAndSend() {
+  // Safety: clean tracks with no update for >65s (Chrome throttles bg tabs to 1/min)
+  const now = Date.now();
+  for (const [tabId] of tracks) {
+    if (now - (lastUpdate.get(tabId) || 0) > 65000) {
+      tracks.delete(tabId);
+      lastUpdate.delete(tabId);
+    }
+  }
+
+  let best = null;
+  for (const [, track] of tracks) {
+    if (track.data.state === 'playing') { best = track; break; }
+    if (!best) best = track;
+  }
+
+  if (best) {
+    lastSource = best.source;
+    currentTrackData = best.data;
+    send(best.data);
+  } else if (tracks.size === 0) {
+    if (sentKey !== 'no_music') {
+      sentKey = 'no_music';
+      lastSource = '';
+      currentTrackData = { error: 'no_music' };
+      send(currentTrackData);
+    }
+  }
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'mediaSessionUpdate') {
+    const tabId = sender.tab?.id;
+    if (!tabId) return;
+
+    tracks.set(tabId, { data: msg.data, source: getHostname(sender.tab?.url || '') });
+    lastUpdate.set(tabId, Date.now());
+    pickAndSend();
+    return;
+  }
+
+  if (msg.type === 'trackEnded') {
+    const tabId = sender.tab?.id;
+    if (tabId) {
+      tracks.delete(tabId);
+      lastUpdate.delete(tabId);
+    }
+    pickAndSend();
+    return;
+  }
+
+  if (msg.type === 'getStatus') {
+    sendResponse({
+      connected: ws !== null && wsAuthenticated,
+      track: currentTrackData && !currentTrackData.error ? currentTrackData : null,
+      source: lastSource,
+      tabs: tracks.size,
+      debug: {
+        wsState: ws ? ws.readyState : -1,
+        wsAuth: wsAuthenticated,
+        wsConn: wsConnecting,
+        error: lastError,
+        port: wsPort
+      }
+    });
+    return true;
+  }
+
+  if (msg.type === 'reconnect') {
+    if (msg.wsPort !== undefined) wsPort = msg.wsPort;
+    if (ws) { try { ws.close(); } catch (e) {} }
+    ws = null;
+    wsAuthenticated = false;
+    wsConnecting = false;
+    sentKey = '';
+    connect();
+    sendResponse({ ok: true });
+    return true;
+  }
+});
+
+chrome.alarms.create('heartbeat', { periodInMinutes: 1 / 4 });
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'heartbeat') {
+    connect();
+  }
+});
 
 function getHostname(url) {
   try { return new URL(url).hostname; } catch { return ''; }
 }
 
-// Определяем рекламу YouTube по title
-function isYTAd(url, msData) {
-  if (!msData) return false;
-  const t = (msData.title || '').toLowerCase();
-  return t.includes('реклама') || t.includes('advertisement') || t.includes('ad ') || t.startsWith('ad|');
-}
+chrome.storage.local.get({ wsPort: DEFAULT_PORT }, (items) => {
+  wsPort = items.wsPort;
+});
 
-function checkTab(tab) {
-  return new Promise((resolve) => {
-    if (!tab.url) { resolve(null); return; }
-    if (tab.url.startsWith('chrome://') || tab.url.startsWith('edge://') || tab.url.startsWith('devtools://') || tab.url.startsWith('about:')) {
-      resolve(null); return;
-    }
+connect();
 
+chrome.tabs.onRemoved.addListener((tabId) => {
+  if (tracks.has(tabId)) {
+    tracks.delete(tabId);
+    lastUpdate.delete(tabId);
+    pickAndSend();
+  }
+});
+
+// Inject content.js into all existing tabs so they don't need F5
+function injectContent(tabs) {
+  for (const tab of tabs) {
+    if (!tab.id) continue;
     chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => {
-        let msData = null;
-        if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
-          const m = navigator.mediaSession.metadata;
-          msData = {
-            title: m.title || '',
-            artist: m.artist || '',
-            album: m.album || '',
-            artwork: (m.artwork && m.artwork.length > 0) ? m.artwork[m.artwork.length - 1].src : '',
-            state: navigator.mediaSession.playbackState || 'none'
-          };
-        }
-        if (!msData || !msData.title) return null;
-
-        let timing = null;
-        const slider = document.querySelector('input[type="range"][aria-label="Управление таймкодом"]');
-        if (slider) {
-          const duration = parseFloat(slider.getAttribute('max')) || 0;
-          const current = parseFloat(slider.getAttribute('value')) || 0;
-          if (duration > 0) {
-            timing = { currentTime: current, duration: duration };
-          }
-        }
-
-        return { msData, timing };
-      }
-    }).then((results) => {
-      resolve(results?.[0]?.result || null);
-    }).catch(() => resolve(null));
+      files: ['content.js']
+    }).catch(() => {});
+  }
+}
+chrome.tabs.query({}, (tabs) => {
+  if (tabs && tabs.length > 0) { injectContent(tabs); return; }
+  chrome.windows.getAll({ populate: true }, (windows) => {
+    const all = [];
+    for (const w of windows) { if (w.tabs) all.push(...w.tabs); }
+    if (all.length > 0) injectContent(all);
   });
-}
-
-async function poll() {
-  try {
-    const tabs = await chrome.tabs.query({});
-    let playingTrack = null;
-    let pausedTrack = null;
-
-    for (const tab of tabs) {
-      const result = await checkTab(tab);
-      if (!result?.msData) continue;
-
-      const data = result.msData;
-      if (isYTAd(tab.url, data)) continue;
-
-      const source = getHostname(tab.url);
-
-      if (data.state === 'playing') {
-        playingTrack = { data, timing: result.timing, source };
-        break; // нашли играющий — дальше не ищем
-      }
-
-      // Запоминаем последний найденный paused (на случай если нужно fallback)
-      if (!pausedTrack && source === lastSource) {
-        pausedTrack = { data, timing: result.timing, source };
-      }
-    }
-
-    // Приоритет: playing > paused из lastSource > nothing
-    const bestTrack = playingTrack || pausedTrack;
-
-    if (bestTrack) {
-      // Обновляем lastSource если это playing
-      if (playingTrack) {
-        lastSource = playingTrack.source;
-      }
-
-      const key = bestTrack.data.title + '|' + bestTrack.data.artist + '|' + bestTrack.data.state;
-
-      if (key !== lastSentKey) {
-        lastSentKey = key;
-        const payload = {
-          title: bestTrack.data.title,
-          artist: bestTrack.data.artist,
-          album: bestTrack.data.album,
-          thumbnail: bestTrack.data.artwork || '',
-          state: bestTrack.data.state,
-          ts: Date.now()
-        };
-        if (bestTrack.timing) {
-          payload.currentTime = bestTrack.timing.currentTime;
-          payload.duration = bestTrack.timing.duration;
-        }
-
-        fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          keepalive: true
-        }).catch(() => {});
-      }
-    } else {
-      if (lastSentKey !== 'no_music') {
-        lastSentKey = 'no_music';
-        lastSource = '';
-        fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ error: 'no_music', ts: Date.now() }),
-          keepalive: true
-        }).catch(() => {});
-      }
-    }
-  } catch (e) {}
-
-  setTimeout(poll, 1000);
-}
-
-poll();
-
-chrome.runtime.onInstalled.addListener(() => {
-  console.log('Music Widget Bridge v4.0 installed');
 });

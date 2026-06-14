@@ -304,9 +304,18 @@
         .no-music.active { display: flex; }
 
         .no-music-text {
-            font-size: calc(3vh);
-            color: rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.35);
         }
+        .widget.h ~ .no-music .no-music-text {
+            font-size: min(calc(22vh), calc(4vw));
+            line-height: 1.45;
+        }
+        .widget.v ~ .no-music .no-music-text {
+            font-size: min(calc(12vh), calc(6vw));
+            line-height: 1.45;
+        }
+        .widget.h.compact ~ .no-music .no-music-text { font-size: calc(40vh); }
+        .widget.v.compact ~ .no-music .no-music-text { font-size: calc(28vh); }
 
         #colorAnalyzer { display: none; }
     </style>
@@ -341,11 +350,16 @@
     </div>
 
     <script>
-        const SERVER_URL = 'http://127.0.0.1:9876';
+        const WS_PORT = new URLSearchParams(location.search).get('port') || '4455';
+        /* const WS_PASSWORD = new URLSearchParams(location.search).get('password') || ''; disabled */
         let lastKey = '';
         let isPaused = false;
         let duration = 0;
         let syncId = null;
+
+        let wsWidget = null;
+        let wsWidgetConnected = false;
+        let watchDog = null;
 
         const MOCK_DATA = new URLSearchParams(location.search).get('mock') ? {
             title: 'Blinding Lights',
@@ -562,46 +576,33 @@
                 timingEl.textContent = '';
                 progressFill.style.width = '0%';
             }
+            resetWatchdog();
         }
 
         function hide() {
             if (syncId) clearInterval(syncId);
+            if (watchDog) clearTimeout(watchDog);
             widget.classList.remove('active');
             noMusic.classList.add('active');
         }
 
-        async function fetchTrack() {
-            try {
-                const r = await fetch(SERVER_URL + '/api/track', { signal: AbortSignal.timeout(2000) });
-                return await r.json();
-            } catch { return null; }
+        function resetWatchdog() {
+            if (watchDog) clearTimeout(watchDog);
+            watchDog = setTimeout(hide, 6000);
         }
 
-        async function update() {
-            if (MOCK_DATA) {
-                const data = { ...MOCK_DATA, ts: Date.now() };
-                duration = data.duration;
-                const key = data.title + '|' + data.artist + '|' + data.state;
-                if (key !== lastKey) {
-                    lastKey = key;
-                    show(data);
-                } else {
-                    const adj = data.currentTime + (Date.now() - data.ts) / 1000;
-                    const t = fmt(adj) + ' / ' + fmt(data.duration);
-                    timingEl.textContent = t;
-                    progressFill.style.width = Math.min(adj/data.duration*100, 100) + '%';
-                }
-                return;
-            }
+        function handleTrackData(data) {
+            if (!data || data.error) { hide(); return; }
 
-            const data = await fetchTrack();
-            if (!data || !data.title) { hide(); return; }
+            duration = data.duration || 0;
+            const key = (data.title||'') + '|' + (data.artist||'') + '|' + data.state + '|' + (data.thumbnail||'');
 
-            const key = data.title + '|' + data.artist + '|' + data.state;
             if (key !== lastKey) {
                 lastKey = key;
                 show(data);
             } else {
+                widget.classList.add('active');
+                noMusic.classList.remove('active');
                 const wasPaused = isPaused;
                 isPaused = data.state === 'paused';
                 if (wasPaused !== isPaused) {
@@ -609,15 +610,83 @@
                     progressFill.className = 'progress-fill' + (isPaused ? ' paused' : '');
                 }
                 if (syncId) clearInterval(syncId);
-                if (data.duration > 0 && duration > 0) {
+                if (duration > 0) {
                     const adj = isPaused
                         ? data.currentTime
-                        : data.currentTime + (Date.now() - (data.ts||Date.now())) / 1000;
+                        : (data.currentTime||0) + (Date.now() - (data.ts||Date.now())) / 1000;
                     const t = fmt(adj) + ' / ' + fmt(duration);
                     timingEl.textContent = t;
                     progressFill.style.width = Math.min(adj/duration*100, 100) + '%';
                     if (!isPaused) tick(adj, duration);
                 }
+                resetWatchdog();
+            }
+        }
+
+        async function connectObsWebSocket() {
+            try {
+                if (wsWidget && (wsWidget.readyState === WebSocket.OPEN || wsWidget.readyState === WebSocket.CONNECTING)) {
+                    return;
+                }
+
+                if (wsWidget) {
+                    try { wsWidget.close(); } catch (e) {}
+                    wsWidget = null;
+                }
+
+                const url = 'ws://127.0.0.1:' + WS_PORT;
+                wsWidget = new WebSocket(url);
+
+                wsWidget.onmessage = (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+
+                        if (msg.op === 0) {
+                            const identify = {
+                                op: 1,
+                                d: {
+                                    rpcVersion: 1,
+                                    eventSubscriptions: 0x7FFFFFFF
+                                }
+                            };
+
+                            /* auth disabled
+                            if (msg.d.authentication && WS_PASSWORD) {
+                                const enc = new TextEncoder();
+                                crypto.subtle.digest('SHA-256', enc.encode(WS_PASSWORD + msg.d.authentication.salt)).then((secretBuf) => {
+                                    const secret = btoa(String.fromCharCode(...new Uint8Array(secretBuf)));
+                                    return crypto.subtle.digest('SHA-256', enc.encode(secret + msg.d.authentication.challenge));
+                                }).then((authBuf) => {
+                                    identify.d.authentication = btoa(String.fromCharCode(...new Uint8Array(authBuf)));
+                                    wsWidget.send(JSON.stringify(identify));
+                                }).catch(() => {});
+                            } else {
+                                wsWidget.send(JSON.stringify(identify));
+                            }
+                            */
+                            wsWidget.send(JSON.stringify(identify));
+                        } else if (msg.op === 2) {
+                            wsWidgetConnected = true;
+                        } else if (msg.op === 5 && msg.d.eventType === 'CustomEvent') {
+                            handleTrackData(msg.d.eventData);
+                        }
+                    } catch (e) {}
+                };
+
+                wsWidget.onclose = () => {
+                    wsWidget = null;
+                    wsWidgetConnected = false;
+                    noMusic.textContent = 'Ожидание подключения...';
+                    setTimeout(() => connectObsWebSocket(), 3000);
+                };
+
+                wsWidget.onerror = () => {
+                    if (wsWidget) {
+                        try { wsWidget.close(); } catch (e) {}
+                    }
+                };
+            } catch (e) {
+                setTimeout(() => connectObsWebSocket(), 3000);
             }
         }
 
@@ -627,10 +696,10 @@
         if (MOCK_DATA) {
             duration = MOCK_DATA.duration;
             show(MOCK_DATA);
+        } else {
+            noMusic.classList.add('active');
+            connectObsWebSocket();
         }
-
-        update();
-        setInterval(update, 2000);
     </script>
 </body>
 </html>

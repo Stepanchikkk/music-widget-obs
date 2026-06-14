@@ -1,31 +1,17 @@
-# Dependencies (install with npm)
 node_modules/
+package.json
+package-lock.json
 
-# Dev config
 .qwen/
-QWEN.md
-
-# Dev scripts
-screenshots.js
-
-# Docs
 AGENTS.md
 
-# OS
+screenshots.js
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Logs & env
 *.log
 .env
-
-# Playwright MCP dev deps (not part of project)
-package.json
-package-lock.json

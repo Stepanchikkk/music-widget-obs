@@ -5,187 +5,239 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    width: 300px;
+    width: 330px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #1a1a2e;
-    color: #e0e0e0;
+    background: #111118;
+    color: #d0d0d8;
+    font-size: 13px;
+    line-height: 1.5;
   }
+
   .header {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 14px 16px;
-    background: linear-gradient(135deg, #6C5CE7, #A29BFE);
+    background: linear-gradient(135deg, #5a4bd1, #8b7cf7);
   }
   .header svg { flex-shrink: 0; }
-  .header h1 { font-size: 15px; font-weight: 600; color: #fff; }
-  .header p { font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+  .header h1 { font-size: 14px; font-weight: 600; color: #fff; }
+  .header p { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 2px; }
 
-  .status {
-    padding: 10px 16px;
+  .section { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .section:last-of-type { border-bottom: none; }
+  .section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .status-row {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 13px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
   }
   .dot {
-    width: 8px; height: 8px; border-radius: 50%; background: #555; flex-shrink: 0;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #444;
+    flex-shrink: 0;
+    transition: background 0.3s, box-shadow 0.3s;
   }
-  .dot.connected { background: #00E676; box-shadow: 0 0 6px #00E676; }
-  .dot.error { background: #FF5252; }
-  .dot.waiting { background: #FFC107; }
+  .dot.connected { background: #36d399; box-shadow: 0 0 6px rgba(54,211,153,0.5); }
+  .dot.disconnected { background: #f87171; }
+  .dot.connecting { background: #fbbf24; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-  .track-info {
-    padding: 10px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
-  .track-title {
-    font-size: 13px; font-weight: 500; color: #fff; margin-bottom: 3px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .track-artist { font-size: 11px; color: #999; }
-
-  .hint-box {
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
-  .hint-box p {
-    font-size: 12px;
-    line-height: 1.6;
-    color: #ccc;
-    margin-bottom: 8px;
-  }
-  .hint-box p:last-child { margin-bottom: 0; }
-  .hint-box code {
-    background: rgba(255,255,255,0.08);
-    padding: 1px 5px; border-radius: 3px;
-    font-size: 11px; color: #A29BFE;
-  }
-
-  .steps { padding: 12px 16px; }
-  .steps-title {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
-    color: #888; margin-bottom: 8px;
-  }
-  .step {
-    display: flex; gap: 10px; padding: 6px 0; font-size: 12px; line-height: 1.5;
-  }
-  .step-num {
-    flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
-    background: #6C5CE7; color: #fff; display: flex; align-items: center;
-    justify-content: center; font-size: 11px; font-weight: 600;
-  }
-  .step.done .step-num { background: #00E676; color: #1a1a2e; }
-  .step-text { padding-top: 1px; }
-  .step-text code {
-    background: rgba(255,255,255,0.08);
-    padding: 1px 5px; border-radius: 3px;
-    font-size: 11px; color: #A29BFE;
-  }
-
-  .obs-link {
-    padding: 10px 16px;
-    border-top: 1px solid rgba(255,255,255,0.08);
-  }
-  .obs-link label {
-    display: block;
+  .status-hint {
     font-size: 11px;
+    color: #777;
+    margin-top: 3px;
+  }
+
+  .settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .field-row label {
+    min-width: 56px;
+    font-size: 12px;
     color: #888;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
-  .obs-link .link-row {
-    display: flex; gap: 6px; align-items: center;
-  }
-  .obs-link .link-url {
+  .field-row input[type="text"] {
     flex: 1;
-    padding: 8px 12px;
-    background: rgba(255,255,255,0.05);
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
+    border-radius: 5px;
     font-size: 12px;
-    color: #A29BFE;
-    font-family: 'Consolas', monospace;
-    user-select: all;
+    color: #d0d0d8;
+    font-family: 'Consolas', 'SF Mono', monospace;
+    outline: none;
+    transition: border-color 0.2s;
   }
-  .obs-link .copy-btn {
-    padding: 8px 14px;
+  .field-row input:focus { border-color: #6C5CE7; }
+  .field-row input::placeholder { color: #555; }
+
+  .btn-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .btn {
+    padding: 6px 12px;
     border: none;
-    border-radius: 6px;
-    background: #6C5CE7;
-    color: #fff;
-    font-size: 12px;
+    border-radius: 5px;
+    font-size: 11px;
     font-weight: 500;
     cursor: pointer;
     transition: background 0.2s;
-    white-space: nowrap;
   }
-  .obs-link .copy-btn:hover { background: #7c6cf7; }
-  .obs-link .copy-btn.copied { background: #00E676; color: #1a1a2e; }
+  .btn-primary {
+    background: #5a4bd1;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #6c5ce7; }
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: #aaa;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.14); color: #ddd; }
+
+  .track-info { margin-top: 6px; }
+  .track-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .track-artist { font-size: 11px; color: #999; margin-top: 1px; }
+  .track-source { font-size: 10px; color: #666; margin-top: 4px; }
+
+  .steps { padding: 12px 16px; }
+  .step {
+    display: flex;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #bbb;
+  }
+  .step-num {
+    flex-shrink: 0;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 1px;
+  }
+  .step code {
+    background: rgba(255,255,255,0.07);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+    color: #8b7cf7;
+  }
+  .step .hint {
+    font-size: 11px;
+    color: #666;
+    margin-top: 3px;
+    line-height: 1.5;
+  }
+  .step .hint code {
+    font-size: 10px;
+    color: #8b7cf7;
+  }
+
+  .status-text { font-size: 12px; }
+
+  .footer-link {
+    padding: 10px 16px 14px;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .footer-link a {
+    color: #8b7cf7;
+    font-size: 11px;
+    text-decoration: none;
+  }
+  .footer-link a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
   <div class="header">
-    <svg width="28" height="28" viewBox="0 0 128 128">
-      <defs>
-        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#6C5CE7"/>
-          <stop offset="100%" style="stop-color:#A29BFE"/>
-        </linearGradient>
-      </defs>
-      <circle cx="64" cy="64" r="60" fill="url(#bg)"/>
-      <circle cx="42" cy="78" r="10" fill="#fff"/>
-      <circle cx="42" cy="78" r="4" fill="#6C5CE7"/>
-      <rect x="38" y="30" width="4" height="48" rx="2" fill="#fff"/>
-      <path d="M42 30 L80 22 L80 26 L42 34Z" fill="#fff"/>
-      <circle cx="80" cy="68" r="10" fill="#fff"/>
-      <circle cx="80" cy="68" r="4" fill="#6C5CE7"/>
-      <rect x="76" y="22" width="4" height="46" rx="2" fill="#fff"/>
-    </svg>
+    <img src="icon_fg.png" width="40" height="40" alt="">
     <div>
       <h1>Music Widget Bridge</h1>
-      <p>v4.0 — трансляция музыки в OBS</p>
+      <p>v5.0 &mdash; трансляция музыки в OBS</p>
     </div>
   </div>
 
-  <div class="status">
-    <span class="dot" id="statusDot"></span>
-    <span id="statusText">Проверка...</span>
+  <div class="section">
+    <div class="section-title">Подключение к OBS</div>
+    <div class="status-row">
+      <span class="dot" id="statusDot"></span>
+      <span class="status-text" id="statusText">Проверка...</span>
+    </div>
+    <div class="status-hint" id="statusHint"></div>
   </div>
 
-  <div class="track-info" id="trackInfo" style="display:none;">
-    <div class="track-title" id="trackTitle">—</div>
-    <div class="track-artist" id="trackArtist">—</div>
+  <div class="section" id="trackSection" style="display:none;">
+    <div class="section-title">Сейчас играет</div>
+    <div class="track-info">
+      <div class="track-title" id="trackTitle">&mdash;</div>
+      <div class="track-artist" id="trackArtist">&mdash;</div>
+      <div class="track-source" id="trackSource"></div>
+    </div>
   </div>
 
-  <div class="hint-box" id="hintBox" style="display:none;">
-    <p id="hintText"></p>
+  <div class="section">
+    <div class="section-title">Параметры WebSocket</div>
+    <div class="settings-grid">
+      <div class="field-row">
+        <label>Порт</label>
+        <input type="text" id="portInput" placeholder="4455">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="saveBtn">Применить и переподключиться</button>
+      </div>
+    </div>
   </div>
 
   <div class="steps">
-    <div class="steps-title">Как запустить</div>
-    <div class="step" id="step1">
+    <div class="section-title" style="margin-bottom:6px;">Настройка OBS</div>
+    <div class="step">
       <div class="step-num">1</div>
-      <div class="step-text">Запусти сервер: <code>music-widget-obs\launch.vbs</code> (<code>stop.bat</code> - остановить, <code>restart.bat</code> - перезапустить)</div>
+      <div class="step-text"><strong>Сервис</strong> &rarr; <strong>Настройки сервера WebSocket</strong></div>
     </div>
-    <div class="step" id="step2">
+    <div class="step">
       <div class="step-num">2</div>
-      <div class="step-text">Включи <strong>музыку</strong> в браузере</div>
+      <div class="step-text">Поставьте галочку <strong>Включить сервер WebSocket</strong>, снимите галочку <strong>Включить вход в аккаунт</strong>, порт <code>4455</code>, нажмите <strong>OK</strong></div>
     </div>
-    <div class="step" id="step4">
+    <div class="step">
       <div class="step-num">3</div>
-      <div class="step-text">В OBS: Browser Source → скопируй ссылку ниже</div>
+      <div class="step-text"><strong>Добавить источник</strong> &rarr; <strong>Браузер</strong> &rarr; <strong>Создать новый</strong> (можно задать название) &rarr; поставьте галочку <strong>Локальный файл</strong> &rarr; выберите <code>widget.html</code> из папки <code>music-widget-obs</code></div>
     </div>
   </div>
 
-  <div class="obs-link">
-    <label>Ссылка для OBS Browser Source</label>
-    <div class="link-row">
-      <input type="text" class="link-url" id="linkUrl" value="http://127.0.0.1:9876" readonly>
-      <button class="copy-btn" id="copyBtn">Копировать</button>
-    </div>
+  <div class="footer-link">
+    <a href="https://github.com/Stepanchikkk/music-widget-obs" target="_blank">Репозиторий проекта на GitHub</a>
   </div>
 
   <script src="popup.js"></script>
