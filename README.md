@@ -2,7 +2,7 @@
 
 Виджет для OBS, показывающий текущий трек из браузера.
 
-![Preview](screenshots/preview.png)
+<p align="center"><img src="screenshots/preview.png" alt="Preview"></p>
 
 ## Как это работает
 
@@ -16,7 +16,7 @@ mediaSession + DOM slider              Browser Source → widget.html
 
 Расширение поддерживает YouTube, Яндекс.Музыку, Spotify, SoundCloud и другие сайты с Media Session API.
 
-![Extension popup](screenshots/popup.png) ![Extension status](screenshots/popup-status.png)
+<p align="center"><img src="screenshots/popup.png" alt="Extension popup"> <img src="screenshots/popup-status.png" alt="Extension status"></p>
 
 ---
 
@@ -29,7 +29,7 @@ mediaSession + DOM slider              Browser Source → widget.html
 3. Нажмите **Загрузить распакованное** (Load unpacked)
 4. Выберите папку `extension/` из архива
 
-![Load unpacked](screenshots/extension-yandex.png)
+<p align="center"><img src="screenshots/extension-yandex.png" alt="Load unpacked"></p>
 
 ### 2. WebSocket сервер в OBS
 
@@ -42,7 +42,7 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 Сервер запускается автоматически вместе с OBS.
 
-![WebSocket settings](screenshots/source-browser.png)
+<p align="center"><img src="screenshots/source-browser.png" alt="WebSocket settings"></p>
 
 ### 3. Виджет в OBS
 
@@ -52,7 +52,7 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 4. Ширина и высота — на ваш вкус (виджет подстраивается автоматически)
 5. Поставьте галочку **Transparent** (Прозрачный фон)
 
-![Browser Source](screenshots/extension-opera.png)
+<p align="center"><img src="screenshots/extension-opera.png" alt="Browser Source"></p>
 
 ---
 
@@ -71,17 +71,25 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 <div align="center">
 
-![Горизонтальная панель](screenshots/horiz-bar.png)
-*Горизонтальная 800×200*
+<p align="center">
+  <img src="screenshots/horiz-bar.png" alt="Горизонтальная панель"><br>
+  <em>Горизонтальная 800×200</em>
+</p>
 
-![Горизонтальная широкая](screenshots/horiz-wide.png)
-*Горизонтальная широкая 800×150*
+<p align="center">
+  <img src="screenshots/horiz-wide.png" alt="Горизонтальная широкая"><br>
+  <em>Горизонтальная широкая 800×150</em>
+</p>
 
-![Горизонтальная ультраширокая](screenshots/horiz-ultra-wide.png)
-*Горизонтальная ультраширокая 1200×150*
+<p align="center">
+  <img src="screenshots/horiz-ultra-wide.png" alt="Горизонтальная ультраширокая"><br>
+  <em>Горизонтальная ультраширокая 1200×150</em>
+</p>
 
-![Вертикальная](screenshots/vert-tall.png)  ![Квадратная](screenshots/square-big.png) <br>
-*Вертикальная 280×450*&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;*Квадратная 400×400*&emsp;&emsp;&emsp;&emsp;
+<p align="center">
+  <img src="screenshots/vert-tall.png" alt="Вертикальная">  <img src="screenshots/square-big.png" alt="Квадратная"><br>
+  <em>Вертикальная 280×450</em>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<em>Квадратная 400×400</em>&emsp;&emsp;&emsp;&emsp;
+</p>
 
 </div>
 
