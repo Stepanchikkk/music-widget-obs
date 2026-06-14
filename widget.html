@@ -346,12 +346,16 @@
     </div>
 
     <div class="no-music" id="no-music">
-        <div class="no-music-text">Нет воспроизведения</div>
+        <div class="no-music-text"></div>
     </div>
 
     <script>
         const WS_PORT = new URLSearchParams(location.search).get('port') || '4455';
-        /* const WS_PASSWORD = new URLSearchParams(location.search).get('password') || ''; disabled */
+        const LANG = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ru';
+        const TXT = {
+            ru: { noMusic: 'Нет воспроизведения', waiting: 'Ожидание подключения...' },
+            en: { noMusic: 'No music playing', waiting: 'Waiting for connection...' }
+        };
         let lastKey = '';
         let isPaused = false;
         let duration = 0;
@@ -384,6 +388,8 @@
         const stateBtn = $('state-btn');
         const progressFill = $('progress');
         const colorCanvas = $('colorAnalyzer');
+        const noMusicText = document.querySelector('.no-music-text');
+        noMusicText.textContent = TXT[LANG].noMusic;
 
         const SVG_PLAY = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7,4 20,12 7,20"/></svg>`;
         const SVG_PAUSE = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`;
@@ -676,7 +682,7 @@
                 wsWidget.onclose = () => {
                     wsWidget = null;
                     wsWidgetConnected = false;
-                    noMusic.textContent = 'Ожидание подключения...';
+                    noMusicText.textContent = TXT[LANG].waiting;
                     setTimeout(() => connectObsWebSocket(), 3000);
                 };
 
