@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Music Widget OBS",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Отображает название и статус текущего трека в OBS. github.com/Stepanchikkk/music-widget-obs",
   "permissions": [
     "storage",
