@@ -4,6 +4,7 @@ package-lock.json
 
 .qwen/
 AGENTS.md
+.opencode/
 
 screenshots.js
 .DS_Store
