@@ -69,11 +69,18 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 Меняйте ориентацию, просто изменяя размеры Browser Source в OBS.
 
-![Horizontal bar](screenshots/horiz-bar.png) ![Horizontal wide](screenshots/horiz-wide.png)
+<div align="center">
 
-![Horizontal ultra wide](screenshots/horiz-ultra-wide.png) ![Vertical tall](screenshots/vert-tall.png)
+| | |
+|---|---|
+| ![Горизонтальная панель](screenshots/horiz-bar.png) | ![Горизонтальная широкая](screenshots/horiz-wide.png) |
+| Горизонтальная 800×200 | Горизонтальная широкая 800×150 |
+| ![Горизонтальная ультраширокая](screenshots/horiz-ultra-wide.png) | ![Вертикальная](screenshots/vert-tall.png) |
+| Горизонтальная ультраширокая 1200×150 | Вертикальная 280×450 |
+| ![Квадратная](screenshots/square-big.png) |
+| Квадратная 400×400 |
 
-![Square big](screenshots/square-big.png)
+</div>
 
 ### Компактный режим
 
