@@ -69,36 +69,17 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 Меняйте ориентацию, просто изменяя размеры Browser Source в OBS.
 
-<table align="center" border="0" cellpadding="10" rules="none">
-  <tr>
-    <td align="center" colspan="2">
-      <img src="screenshots/horiz-bar.png" alt="Горизонтальная панель"><br>
-      <em>Горизонтальная 800×200</em>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2">
-      <img src="screenshots/horiz-wide.png" alt="Горизонтальная широкая"><br>
-      <em>Горизонтальная широкая 800×150</em>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2">
-      <img src="screenshots/horiz-ultra-wide.png" alt="Горизонтальная ультраширокая"><br>
-      <em>Горизонтальная ультраширокая 1200×150</em>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="screenshots/vert-tall.png" alt="Вертикальная"><br>
-      <em>Вертикальная 280×450</em>
-    </td>
-    <td align="center">
-      <img src="screenshots/square-big.png" alt="Квадратная"><br>
-      <em>Квадратная 400×400</em>
-    </td>
-  </tr>
-</table>
+![Горизонтальная панель](screenshots/horiz-bar.png)
+*Горизонтальная 800×200*
+
+![Горизонтальная широкая](screenshots/horiz-wide.png)
+*Горизонтальная широкая 800×150*
+
+![Горизонтальная ультраширокая](screenshots/horiz-ultra-wide.png)
+*Горизонтальная ультраширокая 1200×150*
+
+![Вертикальная](screenshots/vert-tall.png) ![Квадратная](screenshots/square-big.png)
+*Вертикальная 280×450* *Квадратная 400×400*
 
 ### Компактный режим
 
