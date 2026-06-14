@@ -22,8 +22,8 @@ mediaSession + DOM slider              Browser Source → widget.html
 
 ## Установка
 
-Скачайте последний релиз и распакуйте в удобное место:
-[https://github.com/Stepanchikkk/music-widget-obs/releases/latest](https://github.com/Stepanchikkk/music-widget-obs/releases/latest)
+Скачайте последний релиз и распакуйте в удобное место:  
+[music-widget-obs.zip](https://github.com/Stepanchikkk/music-widget-obs/releases/latest/download/music-widget-obs.zip)
 
 ### 1. Расширение для браузера
 
