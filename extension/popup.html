@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { overflow: hidden; border-radius: 12px; }
   body {
     width: 330px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -11,6 +12,8 @@
     color: #d0d0d8;
     font-size: 13px;
     line-height: 1.5;
+    overflow: hidden;
+    border-radius: 12px;
   }
 
   .header {
@@ -146,7 +149,6 @@
     outline: none;
     cursor: pointer;
     transition: border-color 0.2s;
-    appearance: auto;
   }
   .style-select:focus { border-color: #6C5CE7; }
   .style-select option { background: #1a1a24; color: #d0d0d8; }
