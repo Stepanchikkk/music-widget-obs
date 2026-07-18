@@ -255,20 +255,23 @@ function updateStatus(status, alarm) {
   }
   if (status.connected) {
     statusDot.className = 'dot connected';
+    trackSection.style.display = 'block';
     if (status.track) {
       statusText.innerHTML = T('statusConnected');
-      trackSection.style.display = 'block';
       trackSource.textContent = status.source || '';
       updatePreview(status.track);
     } else {
       statusText.innerHTML = T('statusConnected');
-      trackSection.style.display = 'none';
+      trackSource.textContent = '—';
+      updatePreview(null);
     }
     statusHint.textContent = '';
   } else {
     statusDot.className = 'dot disconnected';
     statusText.innerHTML = T('statusDisconnected');
-    trackSection.style.display = 'none';
+    trackSection.style.display = 'block';
+    trackSource.textContent = '';
+    updatePreview(null);
 
     const d = status.debug;
     let msg = d && d.error ? d.error : (status.reason || '');
