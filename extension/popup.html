@@ -267,31 +267,44 @@
     gap: 0;
     overflow: hidden;
   }
+  .preview-wrap .track-title-wrap,
+  .preview-wrap .track-artist-wrap,
+  .preview-wrap .track-album-wrap {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+  }
+  .preview-wrap .marquee-inner {
+    display: inline-block;
+    will-change: transform;
+  }
+  .preview-wrap .marquee-inner.mq-active {
+    animation: previewMarquee var(--mq-dur, 8s) linear 1 forwards;
+  }
+  .preview-wrap .marquee-inner span {
+    display: inline-block;
+    padding-right: 3em;
+  }
+  @keyframes previewMarquee {
+    0%   { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
+  }
   .preview-wrap .track-title {
     font-weight: 700;
     color: #fff;
     font-size: 13px;
     line-height: 1.25;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   .preview-wrap .track-artist {
     font-weight: 500;
     color: rgba(255,255,255,0.7);
     font-size: 10px;
     line-height: 1.25;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   .preview-wrap .track-album {
     color: rgba(255,255,255,0.35);
     font-size: 9px;
     line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   .preview-wrap .timing {
     color: rgba(255,255,255,0.5);
@@ -451,9 +464,9 @@
           </div>
         </div>
         <div class="track-info">
-          <div class="track-title" id="previewTitle">—</div>
-          <div class="track-artist" id="previewArtist">—</div>
-          <div class="track-album" id="previewAlbum"></div>
+          <div class="track-title-wrap"><div class="track-title"><div class="marquee-inner" id="previewTitle"><span></span></div></div></div>
+          <div class="track-artist-wrap"><div class="track-artist"><div class="marquee-inner" id="previewArtist"><span></span></div></div></div>
+          <div class="track-album-wrap"><div class="track-album"><div class="marquee-inner" id="previewAlbum"><span></span></div></div></div>
           <div class="timing" id="previewTiming"></div>
         </div>
         <div class="controls">

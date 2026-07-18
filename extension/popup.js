@@ -138,6 +138,29 @@ function previewResetColors() {
 const SVG_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7,4 20,12 7,20"/></svg>';
 const SVG_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
 
+function setPreviewMarquee(el, text) {
+  el.classList.remove('mq-active');
+  if (!text) { el.innerHTML = '<span></span>'; return; }
+  el.innerHTML = '<span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
+  const wrap = el.closest('.track-title-wrap, .track-artist-wrap, .track-album-wrap');
+  if (!wrap) return;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const cw = wrap.clientWidth;
+      const span = el.querySelector('span');
+      if (!span) return;
+      const tw = span.getBoundingClientRect().width;
+      el.classList.remove('mq-active');
+      if (tw > cw + 2) {
+        el.innerHTML = '<span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span><span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
+        const dur = Math.max(4, (tw / 80) * 1000);
+        el.style.setProperty('--mq-dur', (dur / 1000) + 's');
+        el.classList.add('mq-active');
+      }
+    });
+  });
+}
+
 function updatePreview(track) {
   if (!track) {
     noPreview.classList.add('active');
@@ -148,9 +171,9 @@ function updatePreview(track) {
   noPreview.classList.remove('active');
   widgetPreviewBody.classList.remove('hidden');
 
-  previewTitle.textContent = track.title || '';
-  previewArtist.textContent = track.artist || '';
-  previewAlbum.textContent = track.album || '';
+  setPreviewMarquee(previewTitle, track.title || '');
+  setPreviewMarquee(previewArtist, track.artist || '');
+  setPreviewMarquee(previewAlbum, track.album || '');
 
   const isPaused = track.state === 'paused';
   previewPlay.innerHTML = isPaused ? SVG_PLAY : SVG_PAUSE;
