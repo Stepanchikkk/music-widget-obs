@@ -134,15 +134,22 @@
     color: #aaa;
   }
   .btn-secondary:hover { background: rgba(255,255,255,0.14); color: #ddd; }
-  .style-btn {
-    background: rgba(255,255,255,0.08);
-    color: #aaa;
+  .style-select {
+    width: 100%;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px;
+    font-size: 12px;
+    color: #d0d0d8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: auto;
   }
-  .style-btn:hover { background: rgba(255,255,255,0.14); color: #ddd; }
-  .style-btn.active {
-    background: #5a4bd1;
-    color: #fff;
-  }
+  .style-select:focus { border-color: #6C5CE7; }
+  .style-select option { background: #1a1a24; color: #d0d0d8; }
 
   .track-info { margin-top: 6px; }
   .track-title {
@@ -255,10 +262,7 @@
 
   <div class="section">
     <div class="section-title" id="styleSectionTitle">Стиль виджета</div>
-    <div class="btn-row">
-      <button class="btn style-btn" data-style="classic">Классический</button>
-      <button class="btn style-btn" data-style="compact">Компактный</button>
-    </div>
+    <select class="style-select" id="styleSelect"></select>
   </div>
 
   <div class="steps">

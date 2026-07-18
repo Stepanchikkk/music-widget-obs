@@ -72,7 +72,12 @@ const trackSource = document.getElementById('trackSource');
 const portInput = document.getElementById('portInput');
 const saveBtn = document.getElementById('saveBtn');
 const langSwitch = document.getElementById('langSwitch');
-const styleBtns = document.querySelectorAll('.style-btn');
+const styleSelect = document.getElementById('styleSelect');
+
+const STYLES = [
+  { id: 'classic', key: 'styleClassic' },
+  { id: 'compact', key: 'styleCompact' },
+];
 
 function T(key, vars) {
   let s = (L10N[lang] && L10N[lang][key]) || key;
@@ -100,8 +105,8 @@ function applyLang() {
   saveBtn.textContent = T('saveBtn');
   langSwitch.textContent = lang === 'ru' ? 'EN' : 'RU';
   document.getElementById('styleSectionTitle').textContent = T('styleTitle');
-  document.querySelector('.style-btn[data-style="classic"]').textContent = T('styleClassic');
-  document.querySelector('.style-btn[data-style="compact"]').textContent = T('styleCompact');
+  styleSelect.innerHTML = STYLES.map(s => `<option value="${s.id}">${T(s.key)}</option>`).join('');
+  styleSelect.value = currentStyle;
 }
 
 function loadLang() {
@@ -123,7 +128,8 @@ langSwitch.addEventListener('click', () => {
 
 function updateStatus(status, alarm) {
   if (status.style && status.style !== currentStyle) {
-    applyStyleUI(status.style);
+    currentStyle = status.style;
+    styleSelect.value = status.style;
   }
   if (status.connected) {
     statusDot.className = 'dot connected';
@@ -207,28 +213,20 @@ portInput.addEventListener('keydown', (e) => {
 
 let currentStyle = 'classic';
 
-function applyStyleUI(style) {
-  currentStyle = style;
-  styleBtns.forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.style === style);
-  });
-}
-
 loadSettings();
 loadLang();
 checkStatus();
 setInterval(checkStatus, 2000);
 
 chrome.storage.local.get({ widgetStyle: 'classic' }, (items) => {
-  applyStyleUI(items.widgetStyle || 'classic');
+  currentStyle = items.widgetStyle || 'classic';
+  styleSelect.value = currentStyle;
 });
 
-styleBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const style = btn.dataset.style;
-    if (style === currentStyle) return;
-    applyStyleUI(style);
-    chrome.storage.local.set({ widgetStyle: style });
-    chrome.runtime.sendMessage({ type: 'setStyle', style });
-  });
+styleSelect.addEventListener('change', () => {
+  const style = styleSelect.value;
+  if (style === currentStyle) return;
+  currentStyle = style;
+  chrome.storage.local.set({ widgetStyle: style });
+  chrome.runtime.sendMessage({ type: 'setStyle', style });
 });
