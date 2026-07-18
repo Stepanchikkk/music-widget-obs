@@ -91,6 +91,247 @@ const STYLES = [
   { id: 'compact', key: 'styleCompact' },
 ];
 
+const WIDGET_CSS = `
+.widget {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s ease;
+    transition: background 1s ease;
+    overflow: hidden;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.4);
+}
+.widget.active { display: flex; }
+.widget.compact .track-album { display: none; }
+.widget.compact .timing { display: none; }
+.widget.h.compact .track-title { font-size: calc(40vh); line-height: 1.45; }
+.widget.h.compact .track-artist { font-size: calc(26vh); line-height: 1.5; margin-top: -0.2em}
+.widget.v.compact .track-title { font-size: calc(28vh); line-height: 1.45; }
+.widget.v.compact .track-artist { font-size: calc(20vh); line-height: 1.5; }
+.widget.h.compact .state-btn { width: calc(38vh); height: calc(38vh); }
+.widget.v.compact .state-btn { width: calc(30vh); height: calc(30vh); }
+.widget.h {
+    flex-direction: row;
+    align-items: stretch;
+}
+.widget.h .artwork-wrap {
+    width: 28%;
+    min-width: 60px;
+    position: relative;
+    overflow: hidden;
+}
+.widget.h .track-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4px 80px 16px 16px;
+    min-width: 0;
+    gap: 0;
+    overflow: hidden;
+}
+.widget.h .controls {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+}
+.widget.h .timing {
+    font-size: calc(8vh);
+    margin: 0;
+    white-space: nowrap;
+}
+.widget.h .state-btn {
+    width: calc(35vh);
+    height: calc(35vh);
+}
+.widget.v {
+    flex-direction: column;
+}
+.widget.v .artwork-wrap {
+    flex: none;
+    height: 50%;
+    max-height: 50%;
+    position: relative;
+    overflow: hidden;
+}
+.widget.v .track-info {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px 16px 4px;
+    gap: 2px;
+}
+.widget.v .controls {
+    padding: 4px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.widget.v .state-btn {
+    width: calc(10vh);
+    height: calc(10vh);
+}
+.progress-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
+}
+.widget.h .progress-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.widget.v .progress-wrap {
+    position: relative;
+}
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-1, #8b5cf6), var(--accent-2, #06b6d4));
+    transition: width 1s linear;
+}
+.progress-fill.paused { opacity: 0.35; }
+.artwork {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+.artwork.visible { display: block; }
+.artwork-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.04);
+}
+.artwork-bg.hidden { display: none; }
+.artwork-bg svg {
+    width: 40%;
+    height: 40%;
+    opacity: 0.15;
+    fill: rgba(255,255,255,0.6);
+}
+.track-title-wrap,
+.track-artist-wrap,
+.track-album-wrap {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+}
+.track-title-wrap .marquee-inner,
+.track-artist-wrap .marquee-inner,
+.track-album-wrap .marquee-inner {
+    display: inline-block;
+    will-change: transform;
+}
+.track-title-wrap .marquee-inner.active,
+.track-artist-wrap .marquee-inner.active,
+.track-album-wrap .marquee-inner.active {
+    animation: marquee var(--marquee-duration, 12s) linear 1 forwards;
+}
+.track-title-wrap .marquee-inner span,
+.track-artist-wrap .marquee-inner span,
+.track-album-wrap .marquee-inner span {
+    display: inline-block;
+    padding-right: 3em;
+}
+@keyframes marquee {
+    0%   { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
+}
+.track-title {
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-bottom: 0.08em;
+}
+.widget.h .track-title { font-size: calc(22vh); line-height: 1.45; margin-bottom: 0; }
+.widget.v .track-title { font-size: calc(12vh); line-height: 1.45; }
+.track-artist {
+    font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.widget.h .track-artist { font-size: calc(14vh); line-height: 1.45; margin-bottom: 2px; }
+.widget.v .track-artist { font-size: calc(7vh); line-height: 1.45; margin-bottom: 4px; }
+.timing {
+    color: rgba(255,255,255,0.5);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+.widget.h .timing { font-size: calc(14vh); line-height: 1.45; margin-top: -0.2em}
+.widget.v .timing { font-size: calc(3vh); line-height: 1.45; margin-top: -0.2em}
+.track-album {
+    color: rgba(255,255,255,0.35);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.35;
+}
+.widget.h .track-album { font-size: calc(14vh); margin-top: -0.2em; margin-bottom: 2px;}
+.widget.v .track-album { font-size: calc(4vh); margin-top: -0.2em; margin-bottom: 2px;}
+.state-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.8);
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+.state-btn:hover {
+    background: rgba(255,255,255,0.15);
+}
+.state-btn svg {
+    width: 45%;
+    height: 45%;
+}
+#colorAnalyzer { display: none; }
+`;
+
+function injectPreviewStyles() {
+  const h = document.querySelector('.preview-wrap').clientHeight || 60;
+  const el = document.getElementById('pw-styles');
+  if (el) return;
+  let css = WIDGET_CSS
+    .replace(/calc\((\d+)vh\)/g, (_, n) => (n * h / 100).toFixed(1) + 'px')
+    .replace(/min\(calc\(\d+vh\), calc\(\d+vw\)\)/g, (_, n) => (n * h / 100).toFixed(1) + 'px')
+    .replace(/\.widget\b/g, '.preview-wrap > .widget-preview');
+  const style = document.createElement('style');
+  style.id = 'pw-styles';
+  style.textContent = css;
+  document.head.appendChild(style);
+}
+
 function T(key, vars) {
   let s = (L10N[lang] && L10N[lang][key]) || key;
   if (vars) {
@@ -125,21 +366,21 @@ function previewApplyColors(d, l) {
   previewWidget.style.background = `linear-gradient(135deg, rgba(${d[0]},${d[1]},${d[2]},0.96), rgba(${Math.min(d[0]+55,255)},${Math.min(d[1]+55,255)},${Math.min(d[2]+55,255)},0.92))`;
   const b = (l[0]*299+l[1]*587+l[2]*114)/1000;
   const a = b < 80 ? l.map(v => Math.min(v+120,255)) : l;
-  previewWidget.style.setProperty('--pw-accent-1', `rgb(${a[0]},${a[1]},${a[2]})`);
-  previewWidget.style.setProperty('--pw-accent-2', `rgb(${Math.min(a[0]+40,255)},${Math.min(a[1]+40,255)},${Math.min(a[2]+40,255)})`);
+  previewWidget.style.setProperty('--accent-1', `rgb(${a[0]},${a[1]},${a[2]})`);
+  previewWidget.style.setProperty('--accent-2', `rgb(${Math.min(a[0]+40,255)},${Math.min(a[1]+40,255)},${Math.min(a[2]+40,255)})`);
 }
 
 function previewResetColors() {
   previewWidget.style.background = 'linear-gradient(135deg, rgba(12,12,20,0.97), rgba(28,18,48,0.93))';
-  previewWidget.style.setProperty('--pw-accent-1', '#5a4bd1');
-  previewWidget.style.setProperty('--pw-accent-2', '#8b7cf7');
+  previewWidget.style.setProperty('--accent-1', '#5a4bd1');
+  previewWidget.style.setProperty('--accent-2', '#8b7cf7');
 }
 
 const SVG_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7,4 20,12 7,20"/></svg>';
 const SVG_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
 
 function setPreviewMarquee(el, text) {
-  el.classList.remove('mq-active');
+  el.classList.remove('active');
   if (!text) { el.innerHTML = '<span></span>'; return; }
   el.innerHTML = '<span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
   const wrap = el.closest('.track-title-wrap, .track-artist-wrap, .track-album-wrap');
@@ -150,12 +391,12 @@ function setPreviewMarquee(el, text) {
       const span = el.querySelector('span');
       if (!span) return;
       const tw = span.getBoundingClientRect().width;
-      el.classList.remove('mq-active');
+      el.classList.remove('active');
       if (tw > cw + 2) {
         el.innerHTML = '<span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span><span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
         const dur = Math.max(4, (tw / 80) * 1000);
-        el.style.setProperty('--mq-dur', (dur / 1000) + 's');
-        el.classList.add('mq-active');
+        el.style.setProperty('--marquee-duration', (dur / 1000) + 's');
+        el.classList.add('active');
       }
     });
   });
@@ -209,7 +450,7 @@ function updatePreview(track) {
   applyPreviewStyle(currentStyle);
 }
 function applyPreviewStyle(style) {
-  previewWidget.classList.toggle('compact', style === 'compact');
+  widgetPreviewBody.classList.toggle('compact', style === 'compact');
 }
 
 function applyLang() {
@@ -359,6 +600,7 @@ loadSettings();
 loadLang();
 checkStatus();
 setInterval(checkStatus, 2000);
+injectPreviewStyles();
 
 chrome.storage.local.get({ widgetStyle: 'classic' }, (items) => {
   currentStyle = items.widgetStyle || 'classic';

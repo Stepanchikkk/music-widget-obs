@@ -216,7 +216,7 @@
   }
   .track-artist { font-size: 11px; color: #999; margin-top: 1px; }
 
-  /* Widget preview */
+  /* Widget preview — only container layout */
   .preview-wrap {
     width: 100%;
     height: 60px;
@@ -224,145 +224,9 @@
     position: relative;
     border-radius: 8px;
     overflow: hidden;
-    background: linear-gradient(135deg, rgba(12,12,20,0.97), rgba(28,18,48,0.93));
-    border: 1px solid rgba(255,255,255,0.04);
     transition: background 0.8s ease;
+    border: 1px solid rgba(255,255,255,0.04);
   }
-  .preview-wrap .artwork-wrap {
-    width: 22%;
-    min-width: 42px;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-  .preview-wrap .artwork {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: none;
-  }
-  .preview-wrap .artwork.visible { display: block; }
-  .preview-wrap .artwork-bg {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .preview-wrap .artwork-bg.hidden { display: none; }
-  .preview-wrap .artwork-bg svg {
-    width: 40%;
-    height: 40%;
-    opacity: 0.15;
-    fill: rgba(255,255,255,0.6);
-  }
-  .preview-wrap .track-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 2px 46px 5px 8px;
-    min-width: 0;
-    gap: 0;
-    overflow: hidden;
-  }
-  .preview-wrap .track-title-wrap,
-  .preview-wrap .track-artist-wrap,
-  .preview-wrap .track-album-wrap {
-    overflow: hidden;
-    white-space: nowrap;
-    position: relative;
-  }
-  .preview-wrap .marquee-inner {
-    display: inline-block;
-    will-change: transform;
-  }
-  .preview-wrap .marquee-inner.mq-active {
-    animation: previewMarquee var(--mq-dur, 8s) linear 1 forwards;
-  }
-  .preview-wrap .marquee-inner span {
-    display: inline-block;
-    padding-right: 3em;
-  }
-  @keyframes previewMarquee {
-    0%   { transform: translate3d(0, 0, 0); }
-    100% { transform: translate3d(-50%, 0, 0); }
-  }
-  .preview-wrap .track-title {
-    font-weight: 700;
-    color: #fff;
-    font-size: 13px;
-    line-height: 1.25;
-  }
-  .preview-wrap .track-artist {
-    font-weight: 500;
-    color: rgba(255,255,255,0.7);
-    font-size: 10px;
-    line-height: 1.25;
-  }
-  .preview-wrap .track-album {
-    color: rgba(255,255,255,0.35);
-    font-size: 9px;
-    line-height: 1.2;
-  }
-  .preview-wrap .timing {
-    color: rgba(255,255,255,0.5);
-    font-size: 9px;
-    line-height: 1.25;
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-  }
-  .preview-wrap .controls {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-  }
-  .preview-wrap .state-btn {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255,255,255,0.8);
-    border-radius: 50%;
-    background: rgba(255,255,255,0.08);
-    flex-shrink: 0;
-  }
-  .preview-wrap .state-btn svg {
-    width: 45%;
-    height: 45%;
-  }
-  .preview-wrap .progress-wrap {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: rgba(255,255,255,0.06);
-    overflow: hidden;
-  }
-  .preview-wrap .progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--pw-accent-1, #5a4bd1), var(--pw-accent-2, #8b7cf7));
-    transition: width 1s linear;
-  }
-  .preview-wrap .progress-fill.paused { opacity: 0.35; }
-
-  /* Compact preview */
-  .preview-wrap.compact .track-album { display: none; }
-  .preview-wrap.compact .timing { display: none; }
-  .preview-wrap.compact .track-title { font-size: 22px; line-height: 1.25; }
-  .preview-wrap.compact .track-artist { font-size: 15px; line-height: 1.25; }
-  .preview-wrap.compact .state-btn { width: 22px; height: 22px; }
-
-  /* No preview */
   .preview-wrap .no-preview {
     display: none;
     align-items: center;
@@ -370,7 +234,7 @@
     width: 100%;
     height: 100%;
     color: rgba(255,255,255,0.25);
-    font-size: 14px;
+    font-size: 13px;
   }
   .preview-wrap .no-preview.active { display: flex; }
   .preview-wrap .widget-preview { display: flex; width:100%; height:100%; }
