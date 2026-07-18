@@ -26,6 +26,9 @@ const L10N = {
     noTabs: '\u041d\u0435\u0442 \u0432\u043a\u043b\u0430\u0434\u043e\u043a \u0441 \u043c\u0435\u0434\u0438\u0430. \u0423\u0431\u0435\u0434\u0438\u0442\u0435\u0441\u044c \u0447\u0442\u043e \u043c\u0443\u0437\u044b\u043a\u0430 \u0438\u0433\u0440\u0430\u0435\u0442 \u0447\u0435\u0440\u0435\u0437 YouTube, \u042f\u043d\u0434\u0435\u043a\u0441.\u041c\u0443\u0437\u044b\u043a\u0443 \u0438\u043b\u0438 \u0434\u0440\u0443\u0433\u043e\u0439 \u0441\u0435\u0440\u0432\u0438\u0441 \u0441 MediaSession API',
     waitingTrack: '\u0412\u043a\u043b\u0430\u0434\u043e\u043a \u0441 \u043c\u0435\u0434\u0438\u0430: {tabs}, \u043e\u0436\u0438\u0434\u0430\u043d\u0438\u0435 \u0442\u0440\u0435\u043a\u0430...',
     retryIn: ' \u2022 \u043f\u043e\u0432\u0442\u043e\u0440 \u0447\u0435\u0440\u0435\u0437 {secs}\u0441',
+    styleTitle: '\u0421\u0442\u0438\u043b\u044c \u0432\u0438\u0434\u0436\u0435\u0442\u0430',
+    styleClassic: '\u041a\u043b\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043a\u0438\u0439',
+    styleCompact: '\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439',
   },
   en: {
     title: 'Music Widget OBS',
@@ -52,6 +55,9 @@ const L10N = {
     noTabs: 'No media tabs found. Make sure music is playing via YouTube, Yandex.Music, or another service with MediaSession API',
     waitingTrack: 'Media tabs: {tabs}, waiting for track...',
     retryIn: ' \u2022 retry in {secs}s',
+    styleTitle: 'Widget Style',
+    styleClassic: 'Classic',
+    styleCompact: 'Compact',
   }
 };
 
@@ -66,6 +72,7 @@ const trackSource = document.getElementById('trackSource');
 const portInput = document.getElementById('portInput');
 const saveBtn = document.getElementById('saveBtn');
 const langSwitch = document.getElementById('langSwitch');
+const styleBtns = document.querySelectorAll('.style-btn');
 
 function T(key, vars) {
   let s = (L10N[lang] && L10N[lang][key]) || key;
@@ -92,6 +99,9 @@ function applyLang() {
   document.querySelector('.field-row label').textContent = T('portLabel');
   saveBtn.textContent = T('saveBtn');
   langSwitch.textContent = lang === 'ru' ? 'EN' : 'RU';
+  document.getElementById('styleSectionTitle').textContent = T('styleTitle');
+  document.querySelector('.style-btn[data-style="classic"]').textContent = T('styleClassic');
+  document.querySelector('.style-btn[data-style="compact"]').textContent = T('styleCompact');
 }
 
 function loadLang() {
@@ -112,6 +122,9 @@ langSwitch.addEventListener('click', () => {
 });
 
 function updateStatus(status, alarm) {
+  if (status.style && status.style !== currentStyle) {
+    applyStyleUI(status.style);
+  }
   if (status.connected) {
     statusDot.className = 'dot connected';
     if (status.track) {
@@ -192,7 +205,30 @@ portInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') saveSettings();
 });
 
+let currentStyle = 'classic';
+
+function applyStyleUI(style) {
+  currentStyle = style;
+  styleBtns.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.style === style);
+  });
+}
+
 loadSettings();
 loadLang();
 checkStatus();
 setInterval(checkStatus, 2000);
+
+chrome.storage.local.get({ widgetStyle: 'classic' }, (items) => {
+  applyStyleUI(items.widgetStyle || 'classic');
+});
+
+styleBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const style = btn.dataset.style;
+    if (style === currentStyle) return;
+    applyStyleUI(style);
+    chrome.storage.local.set({ widgetStyle: style });
+    chrome.runtime.sendMessage({ type: 'setStyle', style });
+  });
+});

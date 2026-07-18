@@ -30,7 +30,7 @@
 
         .widget.active { display: flex; }
 
-        /* ===== КОМПАКТНЫЙ (малая высота ≤ 150px) ===== */
+        /* ===== КОМПАКТНЫЙ СТИЛЬ ===== */
         .widget.compact .track-album { display: none; }
         .widget.compact .timing { display: none; }
         .widget.h.compact .track-title { font-size: calc(40vh); line-height: 1.45; }
@@ -397,13 +397,19 @@
         function orient() {
             const h = window.innerHeight;
             const w = window.innerWidth;
-            widget.classList.remove('h', 'v', 'compact');
+            widget.classList.remove('h', 'v');
             if (h >= w) {
                 widget.classList.add('v');
             } else {
                 widget.classList.add('h');
             }
-            if (h <= 155) widget.classList.add('compact');
+        }
+
+        function applyStyle(name) {
+            widget.classList.remove('compact');
+            if (name === 'compact') {
+                widget.classList.add('compact');
+            }
         }
 
         function fmt(s) {
@@ -598,6 +604,8 @@
         }
 
         function handleTrackData(data) {
+            if (data && data._style) applyStyle(data._style);
+
             if (!data || data.error) { hide(); return; }
 
             duration = data.duration || 0;

@@ -4,6 +4,7 @@ let wsAuthenticated = false;
 let wsConnecting = false;
 let lastError = '';
 let wsPort = DEFAULT_PORT;
+let widgetStyle = 'classic';
 
 const tracks = new Map();
 const lastUpdate = new Map();
@@ -84,6 +85,7 @@ function connect() {
 
 function send(data) {
   if (!ws || ws.readyState !== WebSocket.OPEN || !wsAuthenticated) return;
+  data._style = widgetStyle;
 
   try {
     ws.send(JSON.stringify({
@@ -154,6 +156,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       track: currentTrackData && !currentTrackData.error ? currentTrackData : null,
       source: lastSource,
       tabs: tracks.size,
+      style: widgetStyle,
       debug: {
         wsState: ws ? ws.readyState : -1,
         wsAuth: wsAuthenticated,
@@ -176,6 +179,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     sendResponse({ ok: true });
     return true;
   }
+
+  if (msg.type === 'setStyle') {
+    widgetStyle = msg.style;
+    chrome.storage.local.set({ widgetStyle: msg.style });
+    pickAndSend();
+    sendResponse({ ok: true });
+    return true;
+  }
 });
 
 chrome.alarms.create('heartbeat', { periodInMinutes: 1 / 4 });
@@ -189,8 +200,9 @@ function getHostname(url) {
   try { return new URL(url).hostname; } catch { return ''; }
 }
 
-chrome.storage.local.get({ wsPort: DEFAULT_PORT }, (items) => {
+chrome.storage.local.get({ wsPort: DEFAULT_PORT, widgetStyle: 'classic' }, (items) => {
   wsPort = items.wsPort;
+  widgetStyle = items.widgetStyle || 'classic';
 });
 
 connect();

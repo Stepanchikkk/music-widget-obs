@@ -134,6 +134,10 @@
     color: #aaa;
   }
   .btn-secondary:hover { background: rgba(255,255,255,0.14); color: #ddd; }
+  .style-btn.active {
+    background: #5a4bd1;
+    color: #fff;
+  }
 
   .track-info { margin-top: 6px; }
   .track-title {
@@ -241,6 +245,14 @@
       <div class="btn-row">
         <button class="btn btn-primary" id="saveBtn">Применить и переподключиться</button>
       </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title" id="styleSectionTitle">Стиль виджета</div>
+    <div class="btn-row">
+      <button class="btn style-btn" data-style="classic">Классический</button>
+      <button class="btn style-btn" data-style="compact">Компактный</button>
     </div>
   </div>
 
