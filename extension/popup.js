@@ -66,9 +66,17 @@ const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 const statusHint = document.getElementById('statusHint');
 const trackSection = document.getElementById('trackSection');
-const trackTitle = document.getElementById('trackTitle');
-const trackArtist = document.getElementById('trackArtist');
+const trackSectionTitle = document.getElementById('trackSectionTitle');
 const trackSource = document.getElementById('trackSource');
+const previewWidget = document.getElementById('previewWidget');
+const previewArtwork = document.getElementById('previewArtwork');
+const previewTitle = document.getElementById('previewTitle');
+const previewArtist = document.getElementById('previewArtist');
+const previewAlbum = document.getElementById('previewAlbum');
+const previewPlay = document.getElementById('previewPlay');
+const previewProgressBar = document.getElementById('previewProgressBar');
+const previewCurrent = document.getElementById('previewCurrent');
+const previewDuration = document.getElementById('previewDuration');
 const portInput = document.getElementById('portInput');
 const saveBtn = document.getElementById('saveBtn');
 const langSwitch = document.getElementById('langSwitch');
@@ -89,6 +97,53 @@ function T(key, vars) {
     }
   }
   return s;
+}
+
+function fmtTime(s) {
+  if (!s || s <= 0) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+function updatePreview(track) {
+  if (!track) {
+    previewTitle.textContent = '—';
+    previewArtist.textContent = '—';
+    previewAlbum.textContent = '';
+    previewArtwork.className = 'preview-artwork placeholder';
+    previewArtwork.textContent = '♪';
+    previewPlay.className = 'preview-play';
+    previewProgressBar.style.width = '0%';
+    previewCurrent.textContent = '0:00';
+    previewDuration.textContent = '0:00';
+    return;
+  }
+  previewTitle.textContent = track.title || '—';
+  previewArtist.textContent = track.artist || '—';
+  previewAlbum.textContent = track.album || '';
+  previewCurrent.textContent = fmtTime(track.currentTime);
+  previewDuration.textContent = fmtTime(track.duration);
+  const pct = track.duration > 0 ? Math.min(100, (track.currentTime / track.duration) * 100) : 0;
+  previewProgressBar.style.width = pct + '%';
+  previewPlay.className = 'preview-play' + (track.state === 'paused' ? ' paused' : '');
+  if (track.thumbnail) {
+    previewArtwork.className = 'preview-artwork';
+    previewArtwork.textContent = '';
+    previewArtwork.style.backgroundImage = 'url(' + JSON.stringify(track.thumbnail) + ')';
+  } else {
+    previewArtwork.className = 'preview-artwork placeholder';
+    previewArtwork.textContent = '♪';
+    previewArtwork.style.backgroundImage = '';
+  }
+  applyPreviewStyle(currentStyle);
+}
+
+function applyPreviewStyle(style) {
+  const hide = style === 'compact';
+  previewAlbum.style.display = hide ? 'none' : '';
+  const timingEl = document.querySelector('.preview-timing');
+  if (timingEl) timingEl.style.display = hide ? 'none' : '';
 }
 
 function applyLang() {
@@ -137,9 +192,8 @@ function updateStatus(status, alarm) {
     if (status.track) {
       statusText.innerHTML = T('statusConnected');
       trackSection.style.display = 'block';
-      trackTitle.textContent = status.track.title || '\u2014';
-      trackArtist.textContent = status.track.artist || '\u2014';
       trackSource.textContent = status.source || '';
+      updatePreview(status.track);
     } else {
       statusText.innerHTML = T('statusConnected');
       trackSection.style.display = 'none';
@@ -220,6 +274,7 @@ function buildStyleOptions() {
   ).join('');
   const label = STYLES.find(s => s.id === currentStyle);
   styleSummary.textContent = label ? T(label.key) : currentStyle;
+  applyPreviewStyle(currentStyle);
 }
 
 function updateStyleUI() {
@@ -228,6 +283,7 @@ function updateStyleUI() {
   });
   const label = STYLES.find(s => s.id === currentStyle);
   styleSummary.textContent = label ? T(label.key) : currentStyle;
+  applyPreviewStyle(currentStyle);
 }
 
 loadSettings();
@@ -238,6 +294,7 @@ setInterval(checkStatus, 2000);
 chrome.storage.local.get({ widgetStyle: 'classic' }, (items) => {
   currentStyle = items.widgetStyle || 'classic';
   updateStyleUI();
+  applyPreviewStyle(currentStyle);
 });
 
 styleOptions.addEventListener('click', (e) => {
@@ -250,4 +307,5 @@ styleOptions.addEventListener('click', (e) => {
   chrome.runtime.sendMessage({ type: 'setStyle', style });
   updateStyleUI();
   styleDropdown.open = false;
+  applyPreviewStyle(currentStyle);
 });
