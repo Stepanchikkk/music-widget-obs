@@ -407,10 +407,13 @@ function updatePreview(track) {
     noPreview.classList.add('active');
     noPreview.textContent = '—';
     widgetPreviewBody.classList.add('hidden');
+    widgetPreviewBody.classList.remove('active');
+    previewResetColors();
     return;
   }
   noPreview.classList.remove('active');
   widgetPreviewBody.classList.remove('hidden');
+  widgetPreviewBody.classList.add('active', 'h');
 
   setPreviewMarquee(previewTitle, track.title || '');
   setPreviewMarquee(previewArtist, track.artist || '');
