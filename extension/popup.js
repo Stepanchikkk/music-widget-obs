@@ -97,7 +97,7 @@ const WIDGET_CSS = `
     width: 100%;
     height: 100%;
     position: relative;
-    border-radius: 12px;
+    border-radius: 8px;
     border: 1px solid rgba(255,255,255,0.08);
     box-shadow: 0 4px 24px rgba(0,0,0,0.5);
     animation: fadeIn 0.3s ease;
@@ -108,10 +108,10 @@ const WIDGET_CSS = `
 .widget.active { display: flex; }
 .widget.compact .track-album { display: none; }
 .widget.compact .timing { display: none; }
-.widget.h.compact .track-title { font-size: calc(40vh); line-height: 1.45; }
-.widget.h.compact .track-artist { font-size: calc(26vh); line-height: 1.5; margin-top: -0.2em}
-.widget.v.compact .track-title { font-size: calc(28vh); line-height: 1.45; }
-.widget.v.compact .track-artist { font-size: calc(20vh); line-height: 1.5; }
+.widget.h.compact .track-title { font-size: calc(40vh); line-height: 1.25; }
+.widget.h.compact .track-artist { font-size: calc(26vh); line-height: 1.3; }
+.widget.v.compact .track-title { font-size: calc(28vh); line-height: 1.25; }
+.widget.v.compact .track-artist { font-size: calc(20vh); line-height: 1.3; }
 .widget.h.compact .state-btn { width: calc(38vh); height: calc(38vh); }
 .widget.v.compact .state-btn { width: calc(30vh); height: calc(30vh); }
 .widget.h {
@@ -170,8 +170,8 @@ const WIDGET_CSS = `
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 10px 16px 4px;
-    gap: 2px;
+    padding: 6px 16px 6px;
+    gap: 1px;
 }
 .widget.v .controls {
     padding: 4px 16px 12px;
@@ -191,7 +191,7 @@ const WIDGET_CSS = `
     right: 0;
     height: 10px;
     background: rgba(255,255,255,0.1);
-    border-radius: 0 0 12px 12px;
+    border-radius: 0 0 8px 8px;
     overflow: hidden;
 }
 .widget.h .progress-wrap {
@@ -266,10 +266,9 @@ const WIDGET_CSS = `
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-bottom: 0.08em;
 }
-.widget.h .track-title { font-size: calc(22vh); line-height: 1.45; margin-bottom: 0; }
-.widget.v .track-title { font-size: calc(12vh); line-height: 1.45; }
+.widget.h .track-title { font-size: calc(22vh); line-height: 1.25; margin-bottom: 0; }
+.widget.v .track-title { font-size: calc(12vh); line-height: 1.25; }
 .track-artist {
     font-weight: 500;
     color: rgba(255,255,255,0.7);
@@ -277,8 +276,8 @@ const WIDGET_CSS = `
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.widget.h .track-artist { font-size: calc(14vh); line-height: 1.45; margin-bottom: 2px; }
-.widget.v .track-artist { font-size: calc(7vh); line-height: 1.45; margin-bottom: 4px; }
+.widget.h .track-artist { font-size: calc(14vh); line-height: 1.25; margin-bottom: 1px; }
+.widget.v .track-artist { font-size: calc(7vh); line-height: 1.25; margin-bottom: 2px; }
 .timing {
     color: rgba(255,255,255,0.5);
     font-variant-numeric: tabular-nums;
@@ -287,8 +286,7 @@ const WIDGET_CSS = `
     line-height: 1.4;
     white-space: nowrap;
 }
-.widget.h .timing { font-size: calc(14vh); line-height: 1.45; margin-top: -0.2em}
-.widget.v .timing { font-size: calc(3vh); line-height: 1.45; margin-top: -0.2em}
+.widget.v .timing { font-size: calc(3vh); line-height: 1.25; }
 .track-album {
     color: rgba(255,255,255,0.35);
     white-space: nowrap;
@@ -296,8 +294,8 @@ const WIDGET_CSS = `
     text-overflow: ellipsis;
     line-height: 1.35;
 }
-.widget.h .track-album { font-size: calc(14vh); margin-top: -0.2em; margin-bottom: 2px;}
-.widget.v .track-album { font-size: calc(4vh); margin-top: -0.2em; margin-bottom: 2px;}
+.widget.h .track-album { font-size: calc(14vh); margin-bottom: 1px; }
+.widget.v .track-album { font-size: calc(4vh); margin-bottom: 2px; }
 .state-btn {
     display: flex;
     align-items: center;
