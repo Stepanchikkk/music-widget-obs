@@ -321,7 +321,7 @@ const WIDGET_CSS = `
 function injectPreviewStyles() {
   const el = document.getElementById('pw-styles');
   if (el) return;
-  const INTERNAL_H = 200;
+  const INTERNAL_H = 60;
   let css = WIDGET_CSS
     .replace(/calc\((\d+)vh\)/g, (_, n) => (n * INTERNAL_H / 100).toFixed(1) + 'px')
     .replace(/min\(calc\(\d+vh\), calc\(\d+vw\)\)/g, (_, n) => (n * INTERNAL_H / 100).toFixed(1) + 'px')
@@ -363,17 +363,17 @@ function previewColors(img) {
 function previewApplyColors(d, l) {
   const da = (d[0]+d[1]+d[2])/3;
   if (da > 90) d = d.map(v => Math.max(v*0.25, 8)|0);
-  previewWidget.style.background = `linear-gradient(135deg, rgba(${d[0]},${d[1]},${d[2]},0.96), rgba(${Math.min(d[0]+55,255)},${Math.min(d[1]+55,255)},${Math.min(d[2]+55,255)},0.92))`;
+  widgetPreviewBody.style.background = `linear-gradient(135deg, rgba(${d[0]},${d[1]},${d[2]},0.96), rgba(${Math.min(d[0]+55,255)},${Math.min(d[1]+55,255)},${Math.min(d[2]+55,255)},0.92))`;
   const b = (l[0]*299+l[1]*587+l[2]*114)/1000;
   const a = b < 80 ? l.map(v => Math.min(v+120,255)) : l;
-  previewWidget.style.setProperty('--accent-1', `rgb(${a[0]},${a[1]},${a[2]})`);
-  previewWidget.style.setProperty('--accent-2', `rgb(${Math.min(a[0]+40,255)},${Math.min(a[1]+40,255)},${Math.min(a[2]+40,255)})`);
+  widgetPreviewBody.style.setProperty('--accent-1', `rgb(${a[0]},${a[1]},${a[2]})`);
+  widgetPreviewBody.style.setProperty('--accent-2', `rgb(${Math.min(a[0]+40,255)},${Math.min(a[1]+40,255)},${Math.min(a[2]+40,255)})`);
 }
 
 function previewResetColors() {
-  previewWidget.style.background = 'linear-gradient(135deg, rgba(12,12,20,0.97), rgba(28,18,48,0.93))';
-  previewWidget.style.setProperty('--accent-1', '#5a4bd1');
-  previewWidget.style.setProperty('--accent-2', '#8b7cf7');
+  widgetPreviewBody.style.background = '';
+  widgetPreviewBody.style.removeProperty('--accent-1');
+  widgetPreviewBody.style.removeProperty('--accent-2');
 }
 
 const SVG_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7,4 20,12 7,20"/></svg>';
@@ -408,14 +408,12 @@ function updatePreview(track) {
     noPreview.textContent = '—';
     widgetPreviewBody.classList.add('hidden');
     widgetPreviewBody.classList.remove('active');
-    widgetPreviewBody.style.transform = '';
     previewResetColors();
     return;
   }
   noPreview.classList.remove('active');
   widgetPreviewBody.classList.remove('hidden');
   widgetPreviewBody.classList.add('active', 'h');
-  widgetPreviewBody.style.transform = 'scale(' + (60 / 200) + ')';
 
   setPreviewMarquee(previewTitle, track.title || '');
   setPreviewMarquee(previewArtist, track.artist || '');
