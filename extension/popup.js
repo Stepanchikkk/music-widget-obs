@@ -79,7 +79,7 @@ const previewProgress = document.getElementById('previewProgress');
 const previewTiming = document.getElementById('previewTiming');
 const widgetPreviewBody = document.getElementById('widgetPreviewBody');
 const noPreview = document.getElementById('noPreview');
-const portInput = document.getElementById('portInput');
+const previewCanvas = document.getElementById('previewColorAnalyzer');
 const saveBtn = document.getElementById('saveBtn');
 const langSwitch = document.getElementById('langSwitch');
 const styleDropdown = document.getElementById('styleDropdown');
@@ -106,6 +106,33 @@ function fmtTime(s) {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
   return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+function previewColors(img) {
+  const c = previewCanvas.getContext('2d');
+  previewCanvas.width = 8; previewCanvas.height = 8;
+  c.drawImage(img, 0, 0, 8, 8);
+  const d = c.getImageData(0, 0, 8, 8).data;
+  const p = [];
+  for (let i = 0; i < d.length; i += 4) p.push([d[i], d[i+1], d[i+2]]);
+  p.sort((a,b) => (a[0]+a[1]+a[2]) - (b[0]+b[1]+b[2]));
+  return { dark: p[Math.floor(p.length*0.1)], light: p[Math.floor(p.length*0.7)] };
+}
+
+function previewApplyColors(d, l) {
+  const da = (d[0]+d[1]+d[2])/3;
+  if (da > 90) d = d.map(v => Math.max(v*0.25, 8)|0);
+  previewWidget.style.background = `linear-gradient(135deg, rgba(${d[0]},${d[1]},${d[2]},0.96), rgba(${Math.min(d[0]+55,255)},${Math.min(d[1]+55,255)},${Math.min(d[2]+55,255)},0.92))`;
+  const b = (l[0]*299+l[1]*587+l[2]*114)/1000;
+  const a = b < 80 ? l.map(v => Math.min(v+120,255)) : l;
+  previewWidget.style.setProperty('--pw-accent-1', `rgb(${a[0]},${a[1]},${a[2]})`);
+  previewWidget.style.setProperty('--pw-accent-2', `rgb(${Math.min(a[0]+40,255)},${Math.min(a[1]+40,255)},${Math.min(a[2]+40,255)})`);
+}
+
+function previewResetColors() {
+  previewWidget.style.background = 'linear-gradient(135deg, rgba(12,12,20,0.97), rgba(28,18,48,0.93))';
+  previewWidget.style.setProperty('--pw-accent-1', '#5a4bd1');
+  previewWidget.style.setProperty('--pw-accent-2', '#8b7cf7');
 }
 
 const SVG_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7,4 20,12 7,20"/></svg>';
@@ -143,14 +170,17 @@ function updatePreview(track) {
     previewArtwork.onload = () => {
       previewArtwork.classList.add('visible');
       previewArtworkBg.classList.add('hidden');
+      try { const c = previewColors(previewArtwork); previewApplyColors(c.dark, c.light); } catch(e) {}
     };
     previewArtwork.onerror = () => {
       previewArtwork.classList.remove('visible');
       previewArtworkBg.classList.remove('hidden');
+      previewResetColors();
     };
   } else {
     previewArtwork.classList.remove('visible');
     previewArtworkBg.classList.remove('hidden');
+    previewResetColors();
   }
 
   applyPreviewStyle(currentStyle);
