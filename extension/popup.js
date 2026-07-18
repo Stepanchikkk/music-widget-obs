@@ -29,6 +29,9 @@ const L10N = {
     styleTitle: '\u0421\u0442\u0438\u043b\u044c \u0432\u0438\u0434\u0436\u0435\u0442\u0430',
     styleClassic: '\u041a\u043b\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043a\u0438\u0439',
     styleCompact: '\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439',
+    styleGlass: '\u0421\u0442\u0435\u043a\u043b\u044f\u043d\u043d\u044b\u0439',
+    styleMinimal: '\u041c\u0438\u043d\u0438\u043c\u0430\u043b\u0438\u0441\u0442\u0438\u0447\u043d\u044b\u0439',
+    styleStereo: '\u041c\u0430\u0433\u043d\u0438\u0442\u043e\u043b\u0430',
   },
   en: {
     title: 'Music Widget OBS',
@@ -58,6 +61,9 @@ const L10N = {
     styleTitle: 'Widget Style',
     styleClassic: 'Classic',
     styleCompact: 'Compact',
+    styleGlass: 'Glass',
+    styleMinimal: 'Minimal',
+    styleStereo: 'Car Stereo',
   }
 };
 
@@ -68,18 +74,6 @@ const statusHint = document.getElementById('statusHint');
 const trackSection = document.getElementById('trackSection');
 const trackSectionTitle = document.getElementById('trackSectionTitle');
 const trackSource = document.getElementById('trackSource');
-const previewWidget = document.getElementById('previewWidget');
-const previewArtwork = document.getElementById('previewArtwork');
-const previewArtworkBg = document.getElementById('previewArtworkBg');
-const previewTitle = document.getElementById('previewTitle');
-const previewArtist = document.getElementById('previewArtist');
-const previewAlbum = document.getElementById('previewAlbum');
-const previewPlay = document.getElementById('previewPlay');
-const previewProgress = document.getElementById('previewProgress');
-const previewTiming = document.getElementById('previewTiming');
-const widgetPreviewBody = document.getElementById('widgetPreviewBody');
-const noPreview = document.getElementById('noPreview');
-const previewCanvas = document.getElementById('previewColorAnalyzer');
 const saveBtn = document.getElementById('saveBtn');
 const langSwitch = document.getElementById('langSwitch');
 const styleDropdown = document.getElementById('styleDropdown');
@@ -89,247 +83,10 @@ const styleOptions = document.getElementById('styleOptions');
 const STYLES = [
   { id: 'classic', key: 'styleClassic' },
   { id: 'compact', key: 'styleCompact' },
+  { id: 'glass', key: 'styleGlass' },
+  { id: 'minimal', key: 'styleMinimal' },
+  { id: 'stereo', key: 'styleStereo' },
 ];
-
-const WIDGET_CSS = `
-.widget {
-    display: none;
-    width: 100%;
-    height: 100%;
-    position: relative;
-    border-radius: calc(3vh);
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
-    animation: fadeIn 0.3s ease;
-    transition: background 1s ease;
-    overflow: hidden;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.6), 0 0 12px rgba(0,0,0,0.4);
-}
-.widget.active { display: flex; }
-.widget.compact .track-album { display: none; }
-.widget.compact .timing { display: none; }
-.widget.h.compact .track-title { font-size: calc(40vh); line-height: 1.25; }
-.widget.h.compact .track-artist { font-size: calc(26vh); line-height: 1.3; }
-.widget.v.compact .track-title { font-size: calc(28vh); line-height: 1.25; }
-.widget.v.compact .track-artist { font-size: calc(20vh); line-height: 1.3; }
-.widget.h.compact .state-btn { width: calc(38vh); height: calc(38vh); }
-.widget.v.compact .state-btn { width: calc(30vh); height: calc(30vh); }
-.widget.h {
-    flex-direction: row;
-    align-items: stretch;
-}
-.widget.h .artwork-wrap {
-    width: 28%;
-    min-width: 60px;
-    position: relative;
-    overflow: hidden;
-}
-.widget.h .track-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 4px 80px 16px 16px;
-    min-width: 0;
-    gap: 0;
-    overflow: hidden;
-}
-.widget.h .controls {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-    padding: 0;
-}
-.widget.h .timing {
-    font-size: calc(12vh);
-    margin: 0;
-    white-space: nowrap;
-}
-.widget.h .state-btn {
-    width: calc(35vh);
-    height: calc(35vh);
-}
-.widget.v {
-    flex-direction: column;
-}
-.widget.v .artwork-wrap {
-    flex: none;
-    height: 50%;
-    max-height: 50%;
-    position: relative;
-    overflow: hidden;
-}
-.widget.v .track-info {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 6px 16px 6px;
-    gap: 1px;
-}
-.widget.v .controls {
-    padding: 4px 16px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-.widget.v .state-btn {
-    width: calc(10vh);
-    height: calc(10vh);
-}
-.progress-wrap {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 10px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 0 0 calc(3vh) calc(3vh);
-    overflow: hidden;
-}
-.widget.h .progress-wrap {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-}
-.widget.v .progress-wrap {
-    position: relative;
-}
-.progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--accent-1, #8b5cf6), var(--accent-2, #06b6d4));
-    transition: width 1s linear;
-}
-.progress-fill.paused { opacity: 0.35; }
-.artwork {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: none;
-}
-.artwork.visible { display: block; }
-.artwork-bg {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,0.04);
-}
-.artwork-bg.hidden { display: none; }
-.artwork-bg svg {
-    width: 40%;
-    height: 40%;
-    opacity: 0.15;
-    fill: rgba(255,255,255,0.6);
-}
-.track-title-wrap,
-.track-artist-wrap,
-.track-album-wrap {
-    overflow: hidden;
-    white-space: nowrap;
-    position: relative;
-}
-.track-title-wrap .marquee-inner,
-.track-artist-wrap .marquee-inner,
-.track-album-wrap .marquee-inner {
-    display: inline-block;
-    will-change: transform;
-}
-.track-title-wrap .marquee-inner.active,
-.track-artist-wrap .marquee-inner.active,
-.track-album-wrap .marquee-inner.active {
-    animation: marquee var(--marquee-duration, 12s) linear 1 forwards;
-}
-.track-title-wrap .marquee-inner span,
-.track-artist-wrap .marquee-inner span,
-.track-album-wrap .marquee-inner span {
-    display: inline-block;
-    padding-right: 3em;
-}
-@keyframes marquee {
-    0%   { transform: translate3d(0, 0, 0); }
-    100% { transform: translate3d(-50%, 0, 0); }
-}
-.track-title {
-    font-weight: 700;
-    color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.widget.h .track-title { font-size: calc(22vh); line-height: 1.25; margin-bottom: 0; }
-.widget.v .track-title { font-size: calc(12vh); line-height: 1.25; }
-.track-artist {
-    font-weight: 500;
-    color: rgba(255,255,255,0.7);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.widget.h .track-artist { font-size: calc(14vh); line-height: 1.25; margin-bottom: 1px; }
-.widget.v .track-artist { font-size: calc(7vh); line-height: 1.25; margin-bottom: 2px; }
-.timing {
-    color: rgba(255,255,255,0.5);
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    line-height: 1.4;
-    white-space: nowrap;
-}
-.widget.v .timing { font-size: calc(3vh); line-height: 1.25; }
-.track-album {
-    color: rgba(255,255,255,0.35);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.35;
-}
-.widget.h .track-album { font-size: calc(14vh); margin-bottom: 1px; }
-.widget.v .track-album { font-size: calc(4vh); margin-bottom: 2px; }
-.state-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255,255,255,0.8);
-    border-radius: 50%;
-    background: rgba(255,255,255,0.08);
-    transition: background 0.2s;
-    flex-shrink: 0;
-}
-.state-btn:hover {
-    background: rgba(255,255,255,0.15);
-}
-.state-btn svg {
-    width: 45%;
-    height: 45%;
-}
-#colorAnalyzer { display: none; }
-`;
-
-function injectPreviewStyles() {
-  const el = document.getElementById('pw-styles');
-  if (el) return;
-  const INTERNAL_H = 80;
-  let css = WIDGET_CSS
-    .replace(/calc\((\d+)vh\)/g, (_, n) => (n * INTERNAL_H / 100).toFixed(1) + 'px')
-    .replace(/min\(calc\(\d+vh\), calc\(\d+vw\)\)/g, (_, n) => (n * INTERNAL_H / 100).toFixed(1) + 'px')
-    .replace(/\.widget\b/g, '.preview-wrap > .widget-preview')
-    .replace(/\.state-btn:hover\s*\{[^}]*\}/g, '');
-  const style = document.createElement('style');
-  style.id = 'pw-styles';
-  style.textContent = css;
-  document.head.appendChild(style);
-}
 
 function T(key, vars) {
   let s = (L10N[lang] && L10N[lang][key]) || key;
@@ -341,120 +98,33 @@ function T(key, vars) {
   return s;
 }
 
-function fmtTime(s) {
-  if (!s || s <= 0) return '0:00';
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return m + ':' + (sec < 10 ? '0' : '') + sec;
-}
+let currentStyle = 'classic';
+let lastTrack = null;
+let lastConnected = false;
 
-function previewColors(img) {
-  const c = previewCanvas.getContext('2d');
-  previewCanvas.width = 8; previewCanvas.height = 8;
-  c.drawImage(img, 0, 0, 8, 8);
-  const d = c.getImageData(0, 0, 8, 8).data;
-  const p = [];
-  for (let i = 0; i < d.length; i += 4) p.push([d[i], d[i+1], d[i+2]]);
-  p.sort((a,b) => (a[0]+a[1]+a[2]) - (b[0]+b[1]+b[2]));
-  return { dark: p[Math.floor(p.length*0.1)], light: p[Math.floor(p.length*0.7)] };
-}
-
-function previewApplyColors(d, l) {
-  const da = (d[0]+d[1]+d[2])/3;
-  if (da > 90) d = d.map(v => Math.max(v*0.25, 8)|0);
-  widgetPreviewBody.style.background = `linear-gradient(135deg, rgba(${d[0]},${d[1]},${d[2]},0.96), rgba(${Math.min(d[0]+55,255)},${Math.min(d[1]+55,255)},${Math.min(d[2]+55,255)},0.92))`;
-  const b = (l[0]*299+l[1]*587+l[2]*114)/1000;
-  const a = b < 80 ? l.map(v => Math.min(v+120,255)) : l;
-  widgetPreviewBody.style.setProperty('--accent-1', `rgb(${a[0]},${a[1]},${a[2]})`);
-  widgetPreviewBody.style.setProperty('--accent-2', `rgb(${Math.min(a[0]+40,255)},${Math.min(a[1]+40,255)},${Math.min(a[2]+40,255)})`);
-}
-
-function previewResetColors() {
-  widgetPreviewBody.style.background = '';
-  widgetPreviewBody.style.removeProperty('--accent-1');
-  widgetPreviewBody.style.removeProperty('--accent-2');
-}
-
-const SVG_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7,4 20,12 7,20"/></svg>';
-const SVG_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
-
-function setPreviewMarquee(el, text) {
-  const key = text || '';
-  if (el.dataset.pwText === key) return;
-  el.dataset.pwText = key;
-  el.classList.remove('active');
-  if (!text) { el.innerHTML = '<span></span>'; return; }
-  el.innerHTML = '<span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
-  const wrap = el.closest('.track-title-wrap, .track-artist-wrap, .track-album-wrap');
-  if (!wrap) return;
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const cw = wrap.clientWidth;
-      const span = el.querySelector('span');
-      if (!span) return;
-      const tw = span.getBoundingClientRect().width;
-      if (tw > cw + 2) {
-        el.innerHTML = '<span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span><span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
-        const dur = Math.max(4, (tw / 80) * 1000);
-        el.style.setProperty('--marquee-duration', (dur / 1000) + 's');
-        el.classList.add('active');
-      }
-    });
-  });
-}
-
-function updatePreview(track) {
-  if (!track) {
-    noPreview.classList.add('active');
-    noPreview.textContent = '—';
-    widgetPreviewBody.classList.add('hidden');
-    widgetPreviewBody.classList.remove('active');
-    previewResetColors();
-    return;
+function sendToPreview(track, connected) {
+  lastTrack = track;
+  lastConnected = !!connected;
+  const frame = document.getElementById('previewFrame');
+  if (frame && frame.contentWindow) {
+    frame.contentWindow.postMessage({ type: 'trackData', payload: track ? { ...track, _style: currentStyle } : null, connected: !!connected }, '*');
   }
-  noPreview.classList.remove('active');
-  widgetPreviewBody.classList.remove('hidden');
-  widgetPreviewBody.classList.add('active', 'h');
-
-  setPreviewMarquee(previewTitle, track.title || '');
-  setPreviewMarquee(previewArtist, track.artist || '');
-  setPreviewMarquee(previewAlbum, track.album || '');
-
-  const isPaused = track.state === 'paused';
-  previewPlay.innerHTML = isPaused ? SVG_PLAY : SVG_PAUSE;
-  previewProgress.className = 'progress-fill' + (isPaused ? ' paused' : '');
-
-  if (track.duration > 0) {
-    const adj = (track.currentTime||0) + (Date.now() - (track.ts||Date.now())) / 1000;
-    previewTiming.textContent = fmtTime(adj) + ' / ' + fmtTime(track.duration);
-    previewProgress.style.width = Math.min(adj / track.duration * 100, 100) + '%';
-  } else {
-    previewTiming.textContent = '';
-    previewProgress.style.width = '0%';
-  }
-
-  if (track.thumbnail) {
-    previewArtwork.src = track.thumbnail;
-    previewArtwork.onload = () => {
-      previewArtwork.classList.add('visible');
-      previewArtworkBg.classList.add('hidden');
-      try { const c = previewColors(previewArtwork); previewApplyColors(c.dark, c.light); } catch(e) {}
-    };
-    previewArtwork.onerror = () => {
-      previewArtwork.classList.remove('visible');
-      previewArtworkBg.classList.remove('hidden');
-      previewResetColors();
-    };
-  } else {
-    previewArtwork.classList.remove('visible');
-    previewArtworkBg.classList.remove('hidden');
-    previewResetColors();
-  }
-
-  applyPreviewStyle(currentStyle);
 }
+
 function applyPreviewStyle(style) {
-  widgetPreviewBody.classList.toggle('compact', style === 'compact');
+  const frame = document.getElementById('previewFrame');
+  if (frame && frame.contentWindow) {
+    frame.contentWindow.postMessage({ type: 'setStyle', style }, '*');
+  }
+}
+
+function initPreviewFrame() {
+  const frame = document.getElementById('previewFrame');
+  frame.addEventListener('load', () => {
+    if (lastTrack !== undefined) sendToPreview(lastTrack, lastConnected);
+    applyPreviewStyle(currentStyle);
+  });
+  frame.src = chrome.runtime.getURL('widget.html') + '?preview=1';
 }
 
 function applyLang() {
@@ -493,7 +163,7 @@ langSwitch.addEventListener('click', () => {
   saveLang(lang === 'ru' ? 'en' : 'ru');
 });
 
-function updateStatus(status, alarm) {
+function updateStatus(status) {
   if (status.style && status.style !== currentStyle) {
     currentStyle = status.style;
     updateStyleUI();
@@ -504,11 +174,11 @@ function updateStatus(status, alarm) {
     if (status.track) {
       statusText.innerHTML = T('statusConnected');
       trackSource.textContent = status.source || '';
-      updatePreview(status.track);
+      sendToPreview(status.track, true);
     } else {
       statusText.innerHTML = T('statusConnected');
       trackSource.textContent = '—';
-      updatePreview(null);
+      sendToPreview(null, true);
     }
     statusHint.textContent = '';
   } else {
@@ -516,7 +186,7 @@ function updateStatus(status, alarm) {
     statusText.innerHTML = T('statusDisconnected');
     trackSection.style.display = 'block';
     trackSource.textContent = '';
-    updatePreview(null);
+    sendToPreview(null, false);
 
     const d = status.debug;
     let msg = d && d.error ? d.error : (status.reason || '');
@@ -526,10 +196,6 @@ function updateStatus(status, alarm) {
     else if (msg === 'send_failed') msg = T('send_failed');
     else if (msg.startsWith && msg.startsWith('close_')) msg = T('close_') + ' (' + (d ? d.port : '') + ')';
     if (!msg) msg = T('genericError');
-    if (alarm) {
-      const secs = Math.max(0, Math.round((alarm.scheduledTime - Date.now()) / 1000));
-      if (secs > 0) msg += T('retryIn', { secs });
-    }
     statusHint.textContent = msg;
   }
 
@@ -544,14 +210,11 @@ function updateStatus(status, alarm) {
 
 async function checkStatus() {
   try {
-    const [response, alarm] = await Promise.all([
-      chrome.runtime.sendMessage({ type: 'getStatus' }),
-      chrome.alarms.get('heartbeat')
-    ]);
+    const response = await chrome.runtime.sendMessage({ type: 'getStatus' });
     if (response) {
-      updateStatus(response, alarm);
+      updateStatus(response);
     } else {
-      updateStatus({ connected: false, reason: 'error' }, alarm);
+      updateStatus({ connected: false, reason: 'error' });
     }
   } catch (e) {
     updateStatus({ connected: false, reason: 'error' });
@@ -580,8 +243,6 @@ portInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') saveSettings();
 });
 
-let currentStyle = 'classic';
-
 function buildStyleOptions() {
   styleOptions.innerHTML = STYLES.map(s =>
     `<div class="style-option${s.id === currentStyle ? ' active' : ''}" data-style="${s.id}">${T(s.key)}</div>`
@@ -602,9 +263,9 @@ function updateStyleUI() {
 
 loadSettings();
 loadLang();
+initPreviewFrame();
 checkStatus();
 setInterval(checkStatus, 2000);
-injectPreviewStyles();
 
 chrome.storage.local.get({ widgetStyle: 'classic' }, (items) => {
   currentStyle = items.widgetStyle || 'classic';

@@ -63,6 +63,7 @@ function connect() {
     wsAuthenticated = false;
     wsConnecting = false;
     if (event.code && event.code !== 1000 && event.code !== 1006) lastError = 'close_' + event.code;
+    connect();
   };
 
   sock.onerror = () => {
@@ -72,6 +73,7 @@ function connect() {
     ws = null;
     wsAuthenticated = false;
     lastError = 'connection_error';
+    connect();
   };
 
   setTimeout(() => {
@@ -79,8 +81,9 @@ function connect() {
       lastError = 'timeout';
       try { sock.close(); } catch (e) {}
       if (ws === sock) { ws = null; wsAuthenticated = false; wsConnecting = false; }
+      connect();
     }
-  }, 5000);
+  }, 2000);
 }
 
 function send(data) {
@@ -189,7 +192,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 });
 
-chrome.alarms.create('heartbeat', { periodInMinutes: 1 / 4 });
+chrome.alarms.create('heartbeat', { periodInMinutes: 1 / 12 });
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'heartbeat') {
     connect();
