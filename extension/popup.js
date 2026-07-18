@@ -319,12 +319,12 @@ const WIDGET_CSS = `
 `;
 
 function injectPreviewStyles() {
-  const h = document.querySelector('.preview-wrap').clientHeight || 60;
   const el = document.getElementById('pw-styles');
   if (el) return;
+  const INTERNAL_H = 200;
   let css = WIDGET_CSS
-    .replace(/calc\((\d+)vh\)/g, (_, n) => (n * h / 100).toFixed(1) + 'px')
-    .replace(/min\(calc\(\d+vh\), calc\(\d+vw\)\)/g, (_, n) => (n * h / 100).toFixed(1) + 'px')
+    .replace(/calc\((\d+)vh\)/g, (_, n) => (n * INTERNAL_H / 100).toFixed(1) + 'px')
+    .replace(/min\(calc\(\d+vh\), calc\(\d+vw\)\)/g, (_, n) => (n * INTERNAL_H / 100).toFixed(1) + 'px')
     .replace(/\.widget\b/g, '.preview-wrap > .widget-preview');
   const style = document.createElement('style');
   style.id = 'pw-styles';
@@ -408,12 +408,14 @@ function updatePreview(track) {
     noPreview.textContent = '—';
     widgetPreviewBody.classList.add('hidden');
     widgetPreviewBody.classList.remove('active');
+    widgetPreviewBody.style.transform = '';
     previewResetColors();
     return;
   }
   noPreview.classList.remove('active');
   widgetPreviewBody.classList.remove('hidden');
   widgetPreviewBody.classList.add('active', 'h');
+  widgetPreviewBody.style.transform = 'scale(' + (60 / 200) + ')';
 
   setPreviewMarquee(previewTitle, track.title || '');
   setPreviewMarquee(previewArtist, track.artist || '');
