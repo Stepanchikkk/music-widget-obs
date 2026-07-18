@@ -97,7 +97,7 @@ const WIDGET_CSS = `
     width: 100%;
     height: 100%;
     position: relative;
-    border-radius: 8px;
+    border-radius: calc(3vh);
     border: 1px solid rgba(255,255,255,0.08);
     box-shadow: 0 4px 24px rgba(0,0,0,0.5);
     animation: fadeIn 0.3s ease;
@@ -146,7 +146,7 @@ const WIDGET_CSS = `
     padding: 0;
 }
 .widget.h .timing {
-    font-size: calc(8vh);
+    font-size: calc(12vh);
     margin: 0;
     white-space: nowrap;
 }
@@ -191,7 +191,7 @@ const WIDGET_CSS = `
     right: 0;
     height: 10px;
     background: rgba(255,255,255,0.1);
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 calc(3vh) calc(3vh);
     overflow: hidden;
 }
 .widget.h .progress-wrap {
@@ -319,11 +319,12 @@ const WIDGET_CSS = `
 function injectPreviewStyles() {
   const el = document.getElementById('pw-styles');
   if (el) return;
-  const INTERNAL_H = 60;
+  const INTERNAL_H = 80;
   let css = WIDGET_CSS
     .replace(/calc\((\d+)vh\)/g, (_, n) => (n * INTERNAL_H / 100).toFixed(1) + 'px')
     .replace(/min\(calc\(\d+vh\), calc\(\d+vw\)\)/g, (_, n) => (n * INTERNAL_H / 100).toFixed(1) + 'px')
-    .replace(/\.widget\b/g, '.preview-wrap > .widget-preview');
+    .replace(/\.widget\b/g, '.preview-wrap > .widget-preview')
+    .replace(/\.state-btn:hover\s*\{[^}]*\}/g, '');
   const style = document.createElement('style');
   style.id = 'pw-styles';
   style.textContent = css;
@@ -378,6 +379,9 @@ const SVG_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="
 const SVG_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
 
 function setPreviewMarquee(el, text) {
+  const key = text || '';
+  if (el.dataset.pwText === key) return;
+  el.dataset.pwText = key;
   el.classList.remove('active');
   if (!text) { el.innerHTML = '<span></span>'; return; }
   el.innerHTML = '<span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
@@ -389,7 +393,6 @@ function setPreviewMarquee(el, text) {
       const span = el.querySelector('span');
       if (!span) return;
       const tw = span.getBoundingClientRect().width;
-      el.classList.remove('active');
       if (tw > cw + 2) {
         el.innerHTML = '<span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span><span>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>';
         const dur = Math.max(4, (tw / 80) * 1000);
