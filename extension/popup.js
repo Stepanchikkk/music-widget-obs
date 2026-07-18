@@ -72,7 +72,9 @@ const trackSource = document.getElementById('trackSource');
 const portInput = document.getElementById('portInput');
 const saveBtn = document.getElementById('saveBtn');
 const langSwitch = document.getElementById('langSwitch');
-const styleSelect = document.getElementById('styleSelect');
+const styleDropdown = document.getElementById('styleDropdown');
+const styleSummary = document.getElementById('styleSummary');
+const styleOptions = document.getElementById('styleOptions');
 
 const STYLES = [
   { id: 'classic', key: 'styleClassic' },
@@ -105,8 +107,7 @@ function applyLang() {
   saveBtn.textContent = T('saveBtn');
   langSwitch.textContent = lang === 'ru' ? 'EN' : 'RU';
   document.getElementById('styleSectionTitle').textContent = T('styleTitle');
-  styleSelect.innerHTML = STYLES.map(s => `<option value="${s.id}">${T(s.key)}</option>`).join('');
-  styleSelect.value = currentStyle;
+  buildStyleOptions();
 }
 
 function loadLang() {
@@ -129,7 +130,7 @@ langSwitch.addEventListener('click', () => {
 function updateStatus(status, alarm) {
   if (status.style && status.style !== currentStyle) {
     currentStyle = status.style;
-    styleSelect.value = status.style;
+    updateStyleUI();
   }
   if (status.connected) {
     statusDot.className = 'dot connected';
@@ -213,6 +214,22 @@ portInput.addEventListener('keydown', (e) => {
 
 let currentStyle = 'classic';
 
+function buildStyleOptions() {
+  styleOptions.innerHTML = STYLES.map(s =>
+    `<div class="style-option${s.id === currentStyle ? ' active' : ''}" data-style="${s.id}">${T(s.key)}</div>`
+  ).join('');
+  const label = STYLES.find(s => s.id === currentStyle);
+  styleSummary.textContent = label ? T(label.key) : currentStyle;
+}
+
+function updateStyleUI() {
+  styleOptions.querySelectorAll('.style-option').forEach(el => {
+    el.classList.toggle('active', el.dataset.style === currentStyle);
+  });
+  const label = STYLES.find(s => s.id === currentStyle);
+  styleSummary.textContent = label ? T(label.key) : currentStyle;
+}
+
 loadSettings();
 loadLang();
 checkStatus();
@@ -220,13 +237,17 @@ setInterval(checkStatus, 2000);
 
 chrome.storage.local.get({ widgetStyle: 'classic' }, (items) => {
   currentStyle = items.widgetStyle || 'classic';
-  styleSelect.value = currentStyle;
+  updateStyleUI();
 });
 
-styleSelect.addEventListener('change', () => {
-  const style = styleSelect.value;
-  if (style === currentStyle) return;
+styleOptions.addEventListener('click', (e) => {
+  const opt = e.target.closest('.style-option');
+  if (!opt) return;
+  const style = opt.dataset.style;
+  if (style === currentStyle) { styleDropdown.open = false; return; }
   currentStyle = style;
   chrome.storage.local.set({ widgetStyle: style });
   chrome.runtime.sendMessage({ type: 'setStyle', style });
+  updateStyleUI();
+  styleDropdown.open = false;
 });
