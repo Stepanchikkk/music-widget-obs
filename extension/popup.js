@@ -70,13 +70,15 @@ const trackSectionTitle = document.getElementById('trackSectionTitle');
 const trackSource = document.getElementById('trackSource');
 const previewWidget = document.getElementById('previewWidget');
 const previewArtwork = document.getElementById('previewArtwork');
+const previewArtworkBg = document.getElementById('previewArtworkBg');
 const previewTitle = document.getElementById('previewTitle');
 const previewArtist = document.getElementById('previewArtist');
 const previewAlbum = document.getElementById('previewAlbum');
 const previewPlay = document.getElementById('previewPlay');
-const previewProgressBar = document.getElementById('previewProgressBar');
-const previewCurrent = document.getElementById('previewCurrent');
-const previewDuration = document.getElementById('previewDuration');
+const previewProgress = document.getElementById('previewProgress');
+const previewTiming = document.getElementById('previewTiming');
+const widgetPreviewBody = document.getElementById('widgetPreviewBody');
+const noPreview = document.getElementById('noPreview');
 const portInput = document.getElementById('portInput');
 const saveBtn = document.getElementById('saveBtn');
 const langSwitch = document.getElementById('langSwitch');
@@ -106,44 +108,55 @@ function fmtTime(s) {
   return m + ':' + (sec < 10 ? '0' : '') + sec;
 }
 
+const SVG_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7,4 20,12 7,20"/></svg>';
+const SVG_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+
 function updatePreview(track) {
   if (!track) {
-    previewTitle.textContent = '—';
-    previewArtist.textContent = '—';
-    previewAlbum.textContent = '';
-    previewArtwork.className = 'preview-artwork placeholder';
-    previewArtwork.textContent = '♪';
-    previewPlay.className = 'preview-play';
-    previewProgressBar.style.width = '0%';
-    previewCurrent.textContent = '0:00';
-    previewDuration.textContent = '0:00';
+    noPreview.classList.add('active');
+    noPreview.textContent = '—';
+    widgetPreviewBody.classList.add('hidden');
     return;
   }
-  previewTitle.textContent = track.title || '—';
-  previewArtist.textContent = track.artist || '—';
+  noPreview.classList.remove('active');
+  widgetPreviewBody.classList.remove('hidden');
+
+  previewTitle.textContent = track.title || '';
+  previewArtist.textContent = track.artist || '';
   previewAlbum.textContent = track.album || '';
-  previewCurrent.textContent = fmtTime(track.currentTime);
-  previewDuration.textContent = fmtTime(track.duration);
-  const pct = track.duration > 0 ? Math.min(100, (track.currentTime / track.duration) * 100) : 0;
-  previewProgressBar.style.width = pct + '%';
-  previewPlay.className = 'preview-play' + (track.state === 'paused' ? ' paused' : '');
-  if (track.thumbnail) {
-    previewArtwork.className = 'preview-artwork';
-    previewArtwork.textContent = '';
-    previewArtwork.style.backgroundImage = 'url(' + JSON.stringify(track.thumbnail) + ')';
+
+  const isPaused = track.state === 'paused';
+  previewPlay.innerHTML = isPaused ? SVG_PLAY : SVG_PAUSE;
+  previewProgress.className = 'progress-fill' + (isPaused ? ' paused' : '');
+
+  if (track.duration > 0) {
+    const adj = (track.currentTime||0) + (Date.now() - (track.ts||Date.now())) / 1000;
+    previewTiming.textContent = fmtTime(adj) + ' / ' + fmtTime(track.duration);
+    previewProgress.style.width = Math.min(adj / track.duration * 100, 100) + '%';
   } else {
-    previewArtwork.className = 'preview-artwork placeholder';
-    previewArtwork.textContent = '♪';
-    previewArtwork.style.backgroundImage = '';
+    previewTiming.textContent = '';
+    previewProgress.style.width = '0%';
   }
+
+  if (track.thumbnail) {
+    previewArtwork.src = track.thumbnail;
+    previewArtwork.onload = () => {
+      previewArtwork.classList.add('visible');
+      previewArtworkBg.classList.add('hidden');
+    };
+    previewArtwork.onerror = () => {
+      previewArtwork.classList.remove('visible');
+      previewArtworkBg.classList.remove('hidden');
+    };
+  } else {
+    previewArtwork.classList.remove('visible');
+    previewArtworkBg.classList.remove('hidden');
+  }
+
   applyPreviewStyle(currentStyle);
 }
-
 function applyPreviewStyle(style) {
-  const hide = style === 'compact';
-  previewAlbum.style.display = hide ? 'none' : '';
-  const timingEl = document.querySelector('.preview-timing');
-  if (timingEl) timingEl.style.display = hide ? 'none' : '';
+  previewWidget.classList.toggle('compact', style === 'compact');
 }
 
 function applyLang() {
