@@ -124,7 +124,7 @@ function initPreviewFrame() {
     if (lastTrack !== undefined) sendToPreview(lastTrack, lastConnected);
     applyPreviewStyle(currentStyle);
   });
-  frame.src = chrome.runtime.getURL('widget.html') + '?preview=1';
+  frame.src = chrome.runtime.getURL('preview.html') + '?preview=1';
 }
 
 function applyLang() {

@@ -136,10 +136,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'mediaSessionUpdate') {
     const tabId = sender.tab?.id;
     if (!tabId) return;
-
-    tracks.set(tabId, { data: msg.data, source: getHostname(sender.tab?.url || '') });
-    lastUpdate.set(tabId, Date.now());
-    pickAndSend();
+    chrome.tabs.get(tabId, () => {
+      if (chrome.runtime.lastError) return;
+      tracks.set(tabId, { data: msg.data, source: getHostname(sender.tab?.url || '') });
+      lastUpdate.set(tabId, Date.now());
+      pickAndSend();
+    });
     return;
   }
 
@@ -186,6 +188,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'setStyle') {
     widgetStyle = msg.style;
     chrome.storage.local.set({ widgetStyle: msg.style });
+    sentKey = '';
     pickAndSend();
     sendResponse({ ok: true });
     return true;
@@ -196,6 +199,7 @@ chrome.alarms.create('heartbeat', { periodInMinutes: 1 / 12 });
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'heartbeat') {
     connect();
+    if (currentTrackData) send(currentTrackData);
   }
 });
 
