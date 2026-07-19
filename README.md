@@ -94,11 +94,33 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 Виджет поддерживает 5 стилей: `classic` (классический), `compact` (компактный), `glass` (стеклянный), `minimal` (минималистичный), `stereo` (магнитола).
 
 <p align="center">
-  <img src="screenshots/preview-classic.png" alt="Классический"><br><br>
-  <img src="screenshots/preview-compact.png" alt="Компактный"><br><br>
-  <img src="screenshots/preview-glass.png" alt="Стеклянный"><br><br>
-  <img src="screenshots/preview-minimal.png" alt="Минимал"><br><br>
-  <img src="screenshots/preview-stereo.png" alt="Магнитола">
+  <img src="screenshots/preview-classic.png" alt="Классический" width="450"><br>
+  <strong>Классический (classic)</strong><br>
+  <code>:root { --widget-style: 'classic' }</code>
+</p>
+
+<p align="center">
+  <img src="screenshots/preview-compact.png" alt="Компактный" width="450"><br>
+  <strong>Компактный (compact)</strong><br>
+  <code>:root { --widget-style: 'compact' }</code>
+</p>
+
+<p align="center">
+  <img src="screenshots/preview-glass.png" alt="Стеклянный" width="450"><br>
+  <strong>Стеклянный (glass)</strong><br>
+  <code>:root { --widget-style: 'glass' }</code>
+</p>
+
+<p align="center">
+  <img src="screenshots/preview-minimal.png" alt="Минимал" width="450"><br>
+  <strong>Минимал (minimal)</strong><br>
+  <code>:root { --widget-style: 'minimal' }</code>
+</p>
+
+<p align="center">
+  <img src="screenshots/preview-stereo.png" alt="Магнитола" width="450"><br>
+  <strong>Магнитола (stereo)</strong><br>
+  <code>:root { --widget-style: 'stereo' }</code>
 </p>
 
 Стиль можно переключать в попапе расширения. Если нужно зафиксировать свой стиль для конкретного Browser Source (например, на разных сценах или несколько виджетов на одной сцене), вставьте в поле **Custom CSS** источника:
