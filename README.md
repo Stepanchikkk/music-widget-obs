@@ -95,32 +95,27 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 <p align="center">
   <img src="screenshots/preview-classic.png" alt="Классический" width="450"><br>
-  <strong>Классический (classic)</strong><br>
-  <code>:root { --widget-style: 'classic' }</code>
+  <strong>Классический (<code>classic</code>)</strong>
 </p>
 
 <p align="center">
   <img src="screenshots/preview-compact.png" alt="Компактный" width="450"><br>
-  <strong>Компактный (compact)</strong><br>
-  <code>:root { --widget-style: 'compact' }</code>
+  <strong>Компактный (<code>compact</code>)</strong>
 </p>
 
 <p align="center">
   <img src="screenshots/preview-glass.png" alt="Стеклянный" width="450"><br>
-  <strong>Стеклянный (glass)</strong><br>
-  <code>:root { --widget-style: 'glass' }</code>
+  <strong>Стеклянный (<code>glass</code>)</strong>
 </p>
 
 <p align="center">
-  <img src="screenshots/preview-minimal.png" alt="Минимал" width="450"><br>
-  <strong>Минимал (minimal)</strong><br>
-  <code>:root { --widget-style: 'minimal' }</code>
+  <img src="screenshots/preview-minimal.png" alt="Минималистичный" width="450"><br>
+  <strong>Минималистичный (<code>minimal</code>)</strong>
 </p>
 
 <p align="center">
   <img src="screenshots/preview-stereo.png" alt="Магнитола" width="450"><br>
-  <strong>Магнитола (stereo)</strong><br>
-  <code>:root { --widget-style: 'stereo' }</code>
+  <strong>Магнитола (<code>stereo</code>)</strong>
 </p>
 
 Стиль можно переключать в попапе расширения. Если нужно зафиксировать свой стиль для конкретного Browser Source (например, на разных сценах или несколько виджетов на одной сцене), вставьте в поле **Custom CSS** источника:
