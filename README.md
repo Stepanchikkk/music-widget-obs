@@ -2,7 +2,7 @@
 
 Виджет для OBS, показывающий текущий трек из браузера.
 
-<p align="center"><img src="screenshots/preview.png" alt="Preview"></p>
+<p align="center"><img src="screenshots/превью классик.png" alt="Preview"></p>
 
 ## Как это работает
 
@@ -16,7 +16,7 @@ mediaSession + DOM slider              Browser Source → widget.html
 
 Расширение поддерживает YouTube, Яндекс.Музыку, Spotify, SoundCloud и другие сайты с Media Session API.
 
-<p align="center"><img src="screenshots/popup_ru.png" alt="Попап на русском"> <img src="screenshots/popup_en.png" alt="Попап на английском"></p>
+<p align="center"><img src="screenshots/popup превью.png" alt="Попап с предпросмотром стилей"></p>
 
 ---
 
@@ -102,6 +102,14 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 Где `stereo` заменить на `classic`, `compact`, `glass` или `minimal`. После этого виджет будет игнорировать настройки в попапе и всегда показывать выбранный стиль.
 
 <p align="center"><img src="screenshots/multiple-styles.png" alt="Несколько стилей на разных сценах"></p>
+
+<p align="center">
+  <img src="screenshots/превью классик.png" alt="Классический"><br><br>
+  <img src="screenshots/превью компакт.png" alt="Компактный"><br><br>
+  <img src="screenshots/превью стекло.png" alt="Стеклянный"><br><br>
+  <img src="screenshots/превью минимал.png" alt="Минимал"><br><br>
+  <img src="screenshots/превью магнитола.png" alt="Магнитола">
+</p>
 
 ---
 
