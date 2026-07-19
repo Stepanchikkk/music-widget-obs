@@ -97,9 +97,11 @@ S.stereo = {
         if (rAF) { cancelAnimationFrame(rAF); rAF = null; }
     },
     show: function(data) {
+        reposition();
         segShow(((data.title || '') + ' - ' + (data.artist || '')).toUpperCase());
     },
     showStatus: function(text) {
+        reposition();
         segShow((text || '').toUpperCase());
     }
 };
