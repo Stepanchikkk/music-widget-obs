@@ -91,7 +91,7 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 ### Стили оформления
 
-Виджет поддерживает 5 стилей: `classic` (классический), `compact` (компактный), `glass` (стеклянный), `minimal` (минималистичный), `stereo` (магнитола).
+Виджет поддерживает 6 стилей: `classic` (классический), `compact` (компактный), `glass` (стеклянный), `minimal` (минималистичный), `stereo` (магнитола), `fallout` (PIP-Boy).
 
 <p align="center">
   <img src="screenshots/preview-classic.png" alt="Классический" width="450"><br>
@@ -118,13 +118,18 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
   <strong>Магнитола (<code>stereo</code>)</strong>
 </p>
 
+<p align="center">
+  <img src="screenshots/preview-fallout.png" alt="PIP-Boy" width="450"><br>
+  <strong>PIP-Boy (<code>fallout</code>)</strong>
+</p>
+
 Стиль можно переключать в попапе расширения. Если нужно зафиксировать свой стиль для конкретного Browser Source (например, на разных сценах или несколько виджетов на одной сцене), вставьте в поле **Custom CSS** источника:
 
 ```css
 :root { --widget-style: 'stereo' }
 ```
 
-Где `stereo` заменить на `classic`, `compact`, `glass` или `minimal`. После этого виджет будет игнорировать настройки в попапе и всегда показывать выбранный стиль.
+Где `stereo` заменить на `classic`, `compact`, `glass`, `minimal` или `fallout`. После этого виджет будет игнорировать настройки в попапе и всегда показывать выбранный стиль.
 
 <p align="center"><img src="screenshots/multiple-styles.png" alt="Несколько стилей на разных сценах"></p>
 
