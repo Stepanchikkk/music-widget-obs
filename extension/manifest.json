@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Music Widget OBS",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Отображает название и статус текущего трека в OBS. github.com/Stepanchikkk/music-widget-obs",
   "permissions": [
     "storage",
@@ -37,7 +37,7 @@
     "128": "icon128.png"
   },
   "web_accessible_resources": [{
-    "resources": ["preview.html", "widget.js", "styles/*.js", "digital-cyrillic.otf", "stereo-bg.png"],
+    "resources": ["preview.html", "widget.js", "styles/*.js", "digital-cyrillic.otf", "stereo-bg.png", "fallout-bg.png", "pip-boy.png"],
     "matches": ["<all_urls>"]
   }]
 }

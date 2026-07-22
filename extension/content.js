@@ -72,7 +72,9 @@ function readDomMedia() {
   if (!titleEl || !artistEl) return null;
   const title = titleEl.textContent?.trim() || '';
   const artist = artistEl.textContent?.trim() || '';
-  const img = document.querySelector('[data-testid="cover-art-image"]');
+  const img = document.querySelector('[data-testid="cover-art-image"]') ||
+              document.querySelector('aside img[src*="image"]') ||
+              document.querySelector('aside img');
   const artwork = img?.src || '';
   const playBtn = document.querySelector('[data-testid="control-button-playpause"]');
   const label = playBtn?.getAttribute('aria-label') || '';
@@ -104,6 +106,8 @@ function isYTAd(data) {
 }
 
 let nullCount = 0;
+var thumbDataUrlCache = {};
+var lastPausedTime = -1;
 
 window.addEventListener('beforeunload', () => {
   try { chrome.runtime.sendMessage({ type: 'trackEnded' }).catch(() => {}); } catch (e) {}
@@ -113,20 +117,72 @@ const intervalId = setInterval(() => {
   try {
     if (!chrome.runtime?.id) { clearInterval(intervalId); return; }
 
-    const data = readMedia() || readDomMedia();
+    var data = readMedia();
+    if (data) {
+      var dom = readDomMedia();
+      if (dom) {
+        if (dom.artwork) data.artwork = dom.artwork;
+        data.state = dom.state;
+      }
+    } else {
+      data = readDomMedia();
+    }
     if (!data) {
       if (isCanvasClip()) return;
       nullCount++;
       if (nullCount >= 3) {
         chrome.runtime.sendMessage({ type: 'trackEnded' }).catch(() => {});
-        nullCount = 0;
+        nullCount = 0; thumbDataUrlCache = {}; lastPausedTime = -1;
       }
       return;
     }
     nullCount = 0;
+    var els = document.querySelectorAll('video, audio');
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].duration && !isNaN(els[i].duration) && els[i].duration > 0) {
+        data.state = els[i].paused ? 'paused' : 'playing';
+        break;
+      }
+    }
     if (isYTAd(data)) return;
 
     const timing = readTiming() || readVideoTiming() || readDomTiming();
+    var curTime = timing?.currentTime || 0;
+    var dur = timing?.duration || 0;
+
+    if (data.state === 'paused') {
+      if (lastPausedTime < 0) lastPausedTime = curTime;
+      curTime = lastPausedTime;
+    } else {
+      lastPausedTime = -1;
+    }
+
+    var thumb = data.artwork || '';
+
+    if (thumb && thumb.includes('i.scdn.co')) {
+      if (thumbDataUrlCache[thumb]) {
+        thumb = thumbDataUrlCache[thumb];
+      } else {
+        try {
+          var imgEl = document.querySelector('[data-testid="cover-art-image"], aside img[src*="image"], aside img');
+          if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+            var c = document.createElement('canvas');
+            c.width = Math.min(imgEl.naturalWidth, 150);
+            c.height = Math.min(imgEl.naturalHeight, 150);
+            var ctx = c.getContext('2d');
+            ctx.drawImage(imgEl, 0, 0, c.width, c.height);
+            var dt = c.toDataURL('image/jpeg', 0.5);
+            if (dt && dt.length > 200) {
+              for (var k in thumbDataUrlCache) if (k !== thumb) delete thumbDataUrlCache[k];
+              thumbDataUrlCache[thumb] = dt;
+              thumb = dt;
+            }
+          }
+        } catch(e) {}
+      }
+    }
+
+    console.log('MW send:', thumb.slice(0,80), 'state:', data.state, 'title:', (data.title||'').slice(0,30));
 
     chrome.runtime.sendMessage({
       type: 'mediaSessionUpdate',
@@ -134,11 +190,11 @@ const intervalId = setInterval(() => {
         title: data.title,
         artist: data.artist,
         album: data.album,
-        thumbnail: data.artwork || '',
+        thumbnail: thumb,
         state: data.state,
         muted: isMuted(),
-        currentTime: timing?.currentTime || 0,
-        duration: timing?.duration || 0,
+        currentTime: curTime,
+        duration: dur,
         ts: Date.now()
       }
     }).catch(() => clearInterval(intervalId));

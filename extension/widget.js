@@ -192,6 +192,7 @@ function applyStyle(name) {
 
 function handleTrackData(data) {
     if (!data) { showStatus(TXT[LANG].noMusic); return; }
+    console.log('MW widget recv thumb:', (data.thumbnail||'').slice(0,60), 'state:', data.state);
     if (!lockedStyle && data._style && data._style !== currentStyle) applyStyle(data._style);
     else if (!currentStyle) applyStyle('classic');
     if (data.error) { showStatus(TXT[LANG].noMusic); return; }

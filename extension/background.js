@@ -118,18 +118,25 @@ function pickAndSend() {
   }
 
   var best = null;
-  for (const [, track] of tracks) {
-    if (!best) { best = track; continue; }
+  var bestTabId = null;
+  for (const [tabId, track] of tracks) {
+    if (!best) { best = track; bestTabId = tabId; continue; }
     var w = trackWeight(track);
     var bw = trackWeight(best);
-    if (w > bw) { best = track; continue; }
+    if (w > bw) { best = track; bestTabId = tabId; continue; }
     if (w < bw) continue;
     var ts = track.data.state === 'playing' ? (track.playingSince || 0) : (track.pausedAt || 0);
     var bts = best.data.state === 'playing' ? (best.playingSince || 0) : (best.pausedAt || 0);
-    if (ts > bts) best = track;
+    if (ts > bts) { best = track; bestTabId = tabId; continue; }
+    if (ts < bts) continue;
+    if ((lastUpdate.get(tabId) || 0) > (lastUpdate.get(bestTabId) || 0)) {
+      best = track;
+      bestTabId = tabId;
+    }
   }
 
   if (best) {
+    console.log('MW bg send thumb:', (best.data.thumbnail||'').slice(0,60), 'source:', best.source);
     lastSource = best.source;
     currentTrackData = best.data;
     send(best.data);
@@ -147,6 +154,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'mediaSessionUpdate') {
     const tabId = sender.tab?.id;
     if (!tabId) return;
+    console.log('MW bg recv tab', tabId, 'thumb:', (msg.data.thumbnail||'').slice(0,60));
     chrome.tabs.get(tabId, () => {
       if (chrome.runtime.lastError) return;
       var prev = tracks.get(tabId);
