@@ -83,7 +83,7 @@ function applyColors(d, l, forStyle) {
 }
 
 function resetColors(forStyle) {
-    if (forStyle === 'glass' || forStyle === 'minimal' || forStyle === 'stereo') {
+    if (forStyle === 'glass' || forStyle === 'minimal' || forStyle === 'stereo' || forStyle === 'fallout') {
         widget.style.background = '';
         widget.style.removeProperty('--accent-1');
         widget.style.removeProperty('--accent-2');
@@ -124,7 +124,7 @@ function setMarqueeText(el, text, gen) {
             var pr = parseFloat(getComputedStyle(span).paddingRight) || 0;
             if (tw - pr > cw + 2) {
                 el.innerHTML = '<span>' + text + '</span><span>' + text + '</span>';
-                var dur = Math.max(4000, (tw / 90) * 1000);
+                var dur = Math.max(4000, (tw / (window.innerHeight / 100)) * 120);
                 el.style.setProperty('--marquee-duration', (dur / 1000) + 's');
                 var found = false;
                 for (var i = 0; i < marqueeItems.length; i++) {

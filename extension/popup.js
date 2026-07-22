@@ -32,6 +32,7 @@ const L10N = {
     styleGlass: '\u0421\u0442\u0435\u043a\u043b\u044f\u043d\u043d\u044b\u0439',
     styleMinimal: '\u041c\u0438\u043d\u0438\u043c\u0430\u043b\u0438\u0441\u0442\u0438\u0447\u043d\u044b\u0439',
     styleStereo: '\u041c\u0430\u0433\u043d\u0438\u0442\u043e\u043b\u0430',
+    styleFallout: 'Fallout',
   },
   en: {
     title: 'Music Widget OBS',
@@ -64,6 +65,7 @@ const L10N = {
     styleGlass: 'Glass',
     styleMinimal: 'Minimal',
     styleStereo: 'Car Stereo',
+    styleFallout: 'Fallout',
   }
 };
 
@@ -86,6 +88,7 @@ const STYLES = [
   { id: 'glass', key: 'styleGlass' },
   { id: 'minimal', key: 'styleMinimal' },
   { id: 'stereo', key: 'styleStereo' },
+  { id: 'fallout', key: 'styleFallout' },
 ];
 
 function T(key, vars) {
