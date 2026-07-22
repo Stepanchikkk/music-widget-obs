@@ -34,7 +34,10 @@ S.glass = {
             setMarqueeText(E.albumEl, data.album || '', gen);
             clearTimeout(marqueeTimer);
             marqueeTimer = setTimeout(function(){if(gen===marqueeGen&&marqueeItems.length>0)marqueeCycle(gen);},1200);
-            if (data.thumbnail) {
+        }
+        if (data.thumbnail) {
+            var s = E.artwork.getAttribute('src');
+            if (s !== data.thumbnail || !E.artwork.classList.contains('visible')) {
                 E.artwork.src = data.thumbnail;
                 widget.style.setProperty('--glass-artwork', 'url(' + data.thumbnail + ')');
                 if (E.artwork.complete && E.artwork.naturalWidth > 0) {
@@ -43,10 +46,10 @@ S.glass = {
                     E.artwork.onload = function(){E.artwork.classList.add('visible');E.artworkBg.classList.add('hidden');};
                     E.artwork.onerror = function(){E.artwork.classList.remove('visible');E.artworkBg.classList.remove('hidden');};
                 }
-            } else {
-                E.artwork.classList.remove('visible'); E.artworkBg.classList.remove('hidden');
-                widget.style.removeProperty('--glass-artwork');
             }
+        } else {
+            E.artwork.classList.remove('visible'); E.artworkBg.classList.remove('hidden');
+            widget.style.removeProperty('--glass-artwork');
         }
         E.stateBtn.innerHTML = data.state === 'paused' ? SVG_PLAY : SVG_PAUSE;
         E.progressFill.className = 'progress-fill' + (data.state === 'paused' ? ' paused' : '');

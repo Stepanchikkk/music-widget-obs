@@ -9,6 +9,7 @@ let widgetStyle = 'classic';
 const tracks = new Map();
 const lastUpdate = new Map();
 let sentKey = '';
+let sentTrackKey = '';
 let lastSource = '';
 let currentTrackData = null;
 
@@ -52,6 +53,7 @@ function connect() {
         wsAuthenticated = true;
         wsConnecting = false;
         sentKey = '';
+        sentTrackKey = '';
         pickAndSend();
       }
     } catch (e) {}
@@ -102,8 +104,11 @@ function send(data) {
   } catch (e) {}
 }
 
+function trackWeight(track) {
+  return (track.data.state === 'playing' ? 2 : 1) + (track.data.muted ? 0 : 2);
+}
+
 function pickAndSend() {
-  // Safety: clean tracks with no update for >65s (Chrome throttles bg tabs to 1/min)
   const now = Date.now();
   for (const [tabId] of tracks) {
     if (now - (lastUpdate.get(tabId) || 0) > 65000) {
@@ -112,10 +117,16 @@ function pickAndSend() {
     }
   }
 
-  let best = null;
+  var best = null;
   for (const [, track] of tracks) {
-    if (track.data.state === 'playing') { best = track; break; }
-    if (!best) best = track;
+    if (!best) { best = track; continue; }
+    var w = trackWeight(track);
+    var bw = trackWeight(best);
+    if (w > bw) { best = track; continue; }
+    if (w < bw) continue;
+    var ts = track.data.state === 'playing' ? (track.playingSince || 0) : (track.pausedAt || 0);
+    var bts = best.data.state === 'playing' ? (best.playingSince || 0) : (best.pausedAt || 0);
+    if (ts > bts) best = track;
   }
 
   if (best) {
@@ -138,7 +149,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (!tabId) return;
     chrome.tabs.get(tabId, () => {
       if (chrome.runtime.lastError) return;
-      tracks.set(tabId, { data: msg.data, source: getHostname(sender.tab?.url || '') });
+      var prev = tracks.get(tabId);
+      var data = msg.data;
+      var playingSince = 0;
+      if (data.state === 'playing' && (!prev || prev.data.state !== 'playing'))
+        playingSince = Date.now();
+      else if (prev)
+        playingSince = prev.playingSince || 0;
+      var pausedAt = 0;
+      if (data.state === 'paused' && (!prev || prev.data.state !== 'paused'))
+        pausedAt = Date.now();
+      else if (prev)
+        pausedAt = prev.pausedAt || 0;
+      tracks.set(tabId, { data: data, source: getHostname(sender.tab?.url || ''), playingSince: playingSince, pausedAt: pausedAt });
       lastUpdate.set(tabId, Date.now());
       pickAndSend();
     });
@@ -189,6 +212,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     widgetStyle = msg.style;
     chrome.storage.local.set({ widgetStyle: msg.style });
     sentKey = '';
+    sentTrackKey = '';
     pickAndSend();
     sendResponse({ ok: true });
     return true;

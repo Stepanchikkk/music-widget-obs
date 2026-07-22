@@ -2,6 +2,34 @@
 var S = window.__STYLES = window.__STYLES || {};
 var E = null, styleEl = null, nodes = null;
 
+function setupMarquee(el, text) {
+    if (!text) { el.innerHTML = ''; el.classList.remove('active'); el.style.transform = ''; return; }
+    el.style.transform = '';
+    el.classList.remove('active');
+    el.innerHTML = '<span>' + text + '</span>';
+    var wrap = el.closest('.track-title-wrap, .track-artist-wrap, .track-album-wrap');
+    if (!wrap) return;
+    var cw = wrap.clientWidth;
+    var span = el.querySelector('span');
+    var tw = span.getBoundingClientRect().width;
+    var pr = parseFloat(getComputedStyle(span).paddingRight) || 0;
+    if (tw - pr > cw + 2) {
+        el.innerHTML = '<span>' + text + '</span><span>' + text + '</span>';
+        span = el.querySelector('span');
+        tw = span.getBoundingClientRect().width;
+        var dur = Math.max(4000, (tw / 90) * 1000);
+        el.style.setProperty('--marquee-duration', (dur / 1000) + 's');
+        for (var i = 0; i < marqueeItems.length; i++) {
+            if (marqueeItems[i].el === el) return;
+        }
+        marqueeItems.push({ el: el, text: text, dur: dur });
+    } else {
+        for (var i = 0; i < marqueeItems.length; i++) {
+            if (marqueeItems[i].el === el) { marqueeItems.splice(i, 1); break; }
+        }
+    }
+}
+
 S.minimal = {
     init: function() {
         widget.classList.add('minimal');
@@ -26,18 +54,26 @@ S.minimal = {
         var isNew = newKey !== showTrackKey;
         if (isNew) showTrackKey = newKey;
         if (isNew) {
+            var title = widget.querySelector('.minimal .track-title');
+            if (title) title.style.fontSize = '';
             marqueeGen++; cleanupMq();
             var gen = marqueeGen;
-            setMarqueeText(E.titleEl, data.title || '', gen);
-            setMarqueeText(E.artistEl, data.artist || '', gen);
+            setupMarquee(E.titleEl, data.title || '');
+            setupMarquee(E.artistEl, data.artist || '');
             clearTimeout(marqueeTimer);
             marqueeTimer = setTimeout(function(){if(gen===marqueeGen&&marqueeItems.length>0)marqueeCycle(gen);},1200);
         }
     },
     showStatus: function(text) {
         if (!E) return;
-        E.titleEl.textContent = text || '';
-        E.artistEl.textContent = '';
+        var title = widget.querySelector('.minimal .track-title');
+        if (title) title.style.fontSize = '';
+        marqueeGen++; cleanupMq();
+        var gen = marqueeGen;
+        setupMarquee(E.titleEl, text || '');
+        E.artistEl.innerHTML = '';
+        clearTimeout(marqueeTimer);
+        marqueeTimer = setTimeout(function(){if(gen===marqueeGen&&marqueeItems.length>0)marqueeCycle(gen);},1200);
         resetColors('minimal');
     }
 };

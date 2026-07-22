@@ -32,7 +32,10 @@ S.compact = {
             setMarqueeText(E.artistEl, data.artist || '', gen);
             clearTimeout(marqueeTimer);
             marqueeTimer = setTimeout(function(){if(gen===marqueeGen&&marqueeItems.length>0)marqueeCycle(gen);},1200);
-            if (data.thumbnail) {
+        }
+        if (data.thumbnail) {
+            var s = E.artwork.getAttribute('src');
+            if (s !== data.thumbnail || !E.artwork.classList.contains('visible')) {
                 E.artwork.src = data.thumbnail;
                 if (E.artwork.complete && E.artwork.naturalWidth > 0) {
                     E.artwork.classList.add('visible'); E.artworkBg.classList.add('hidden');
@@ -41,10 +44,10 @@ S.compact = {
                     E.artwork.onload = function(){E.artwork.classList.add('visible');E.artworkBg.classList.add('hidden');try{var c=colors(E.artwork);applyColors(c.dark,c.light,'compact');}catch(e){}};
                     E.artwork.onerror = function(){E.artwork.classList.remove('visible');E.artworkBg.classList.remove('hidden');resetColors('compact');};
                 }
-            } else {
-                E.artwork.classList.remove('visible'); E.artworkBg.classList.remove('hidden');
-                resetColors('compact');
             }
+        } else {
+            E.artwork.classList.remove('visible'); E.artworkBg.classList.remove('hidden');
+            resetColors('compact');
         }
         E.stateBtn.innerHTML = data.state === 'paused' ? SVG_PLAY : SVG_PAUSE;
         E.progressFill.className = 'progress-fill' + (data.state === 'paused' ? ' paused' : '');

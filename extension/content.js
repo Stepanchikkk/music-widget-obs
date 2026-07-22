@@ -10,7 +10,7 @@ function readMedia() {
     artist: m.artist || '',
     album: m.album || '',
     artwork: (m.artwork && m.artwork.length > 0) ? m.artwork[m.artwork.length - 1].src : '',
-    state: ms.playbackState || 'none'
+    state: ms.playbackState === 'paused' ? 'paused' : 'playing'
   };
 }
 
@@ -28,6 +28,7 @@ function readVideoTiming() {
   for (const el of videos) {
     const d = el.duration;
     if (d && !isNaN(d) && d > 0) {
+      if (d < 20 && (el.muted || el.volume === 0)) continue;
       return { currentTime: el.currentTime, duration: d };
     }
   }
@@ -75,12 +76,26 @@ function readDomMedia() {
   const artwork = img?.src || '';
   const playBtn = document.querySelector('[data-testid="control-button-playpause"]');
   const label = playBtn?.getAttribute('aria-label') || '';
-  return {
-    title,
-    artist,
-    artwork,
-    state: (label === 'Пауза' || label === 'Pause') ? 'playing' : 'paused'
-  };
+  return { title, artist, artwork, state: (label === 'Пауза' || label === 'Pause') ? 'playing' : 'paused' };
+}
+
+function isMuted() {
+  const els = document.querySelectorAll('video, audio');
+  for (const el of els) {
+    if (el.duration && !isNaN(el.duration) && el.duration > 0) {
+      if (el.duration < 20 && (el.muted || el.volume === 0)) continue;
+      return el.muted || el.volume === 0;
+    }
+  }
+  return false;
+}
+
+function isCanvasClip() {
+  const els = document.querySelectorAll('video');
+  for (const el of els) {
+    if (el.muted || el.volume === 0) return true;
+  }
+  return false;
 }
 
 function isYTAd(data) {
@@ -91,7 +106,7 @@ function isYTAd(data) {
 let nullCount = 0;
 
 window.addEventListener('beforeunload', () => {
-  chrome.runtime.sendMessage({ type: 'trackEnded' }).catch(() => {});
+  try { chrome.runtime.sendMessage({ type: 'trackEnded' }).catch(() => {}); } catch (e) {}
 });
 
 const intervalId = setInterval(() => {
@@ -100,6 +115,7 @@ const intervalId = setInterval(() => {
 
     const data = readMedia() || readDomMedia();
     if (!data) {
+      if (isCanvasClip()) return;
       nullCount++;
       if (nullCount >= 3) {
         chrome.runtime.sendMessage({ type: 'trackEnded' }).catch(() => {});
@@ -120,6 +136,7 @@ const intervalId = setInterval(() => {
         album: data.album,
         thumbnail: data.artwork || '',
         state: data.state,
+        muted: isMuted(),
         currentTime: timing?.currentTime || 0,
         duration: timing?.duration || 0,
         ts: Date.now()
