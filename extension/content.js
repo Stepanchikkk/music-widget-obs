@@ -113,6 +113,14 @@ window.addEventListener('beforeunload', () => {
   try { chrome.runtime.sendMessage({ type: 'trackEnded' }).catch(() => {}); } catch (e) {}
 });
 
+function sendTrack(data) {
+  chrome.runtime.sendMessage({ type: 'mediaSessionUpdate', data }).catch(() => {
+    setTimeout(() => {
+      if (chrome.runtime?.id) sendTrack(data);
+    }, 500);
+  });
+}
+
 const intervalId = setInterval(() => {
   try {
     if (!chrome.runtime?.id) { clearInterval(intervalId); return; }
@@ -184,20 +192,17 @@ const intervalId = setInterval(() => {
 
     console.log('MW send:', thumb.slice(0,80), 'state:', data.state, 'title:', (data.title||'').slice(0,30));
 
-    chrome.runtime.sendMessage({
-      type: 'mediaSessionUpdate',
-      data: {
-        title: data.title,
-        artist: data.artist,
-        album: data.album,
-        thumbnail: thumb,
-        state: data.state,
-        muted: isMuted(),
-        currentTime: curTime,
-        duration: dur,
-        ts: Date.now()
-      }
-    }).catch(() => clearInterval(intervalId));
+    sendTrack({
+      title: data.title,
+      artist: data.artist,
+      album: data.album,
+      thumbnail: thumb,
+      state: data.state,
+      muted: isMuted(),
+      currentTime: curTime,
+      duration: dur,
+      ts: Date.now()
+    });
   } catch (e) {
     clearInterval(intervalId);
   }
