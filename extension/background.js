@@ -8,17 +8,28 @@ let widgetStyle = 'classic';
 
 const tracks = new Map();
 const lastUpdate = new Map();
-let sentKey = '';
-let sentTrackKey = '';
 let lastSource = '';
 let currentTrackData = null;
+let activeTabId = null;
+let reconnectTimer = null;
+let connectFailures = 0;
+let lastNoMusicSent = 0;
+let lastSentKind = '';
+let settingsReady = false;
+
+function scheduleConnect() {
+  if (reconnectTimer) return;
+  var delay = Math.min(300 * Math.pow(2, connectFailures), 5000);
+  connectFailures = Math.min(connectFailures + 1, 6);
+  reconnectTimer = setTimeout(() => { reconnectTimer = null; connect(); }, delay);
+}
 
 function connect() {
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
   if (wsConnecting) return;
   if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
 
   wsConnecting = true;
-  lastError = '';
 
   if (ws) { try { ws.close(); } catch (e) {} }
 
@@ -52,9 +63,9 @@ function connect() {
       } else if (msg.op === 2) {
         wsAuthenticated = true;
         wsConnecting = false;
-        sentKey = '';
-        sentTrackKey = '';
-        pickAndSend();
+        connectFailures = 0;
+        lastError = '';
+        pickAndSend(true);
       }
     } catch (e) {}
   };
@@ -65,7 +76,8 @@ function connect() {
     wsAuthenticated = false;
     wsConnecting = false;
     if (event.code && event.code !== 1000 && event.code !== 1006) lastError = 'close_' + event.code;
-    connect();
+    if (!lastError && event.code !== 1000) lastError = 'connection_error';
+    scheduleConnect();
   };
 
   sock.onerror = () => {
@@ -75,7 +87,7 @@ function connect() {
     ws = null;
     wsAuthenticated = false;
     lastError = 'connection_error';
-    connect();
+    scheduleConnect();
   };
 
   setTimeout(() => {
@@ -83,9 +95,9 @@ function connect() {
       lastError = 'timeout';
       try { sock.close(); } catch (e) {}
       if (ws === sock) { ws = null; wsAuthenticated = false; wsConnecting = false; }
-      connect();
+      scheduleConnect();
     }
-  }, 2000);
+  }, 4000);
 }
 
 function send(data) {
@@ -108,15 +120,7 @@ function trackWeight(track) {
   return (track.data.state === 'playing' ? 2 : 1) + (track.data.muted ? 0 : 2);
 }
 
-function pickAndSend() {
-  const now = Date.now();
-  for (const [tabId] of tracks) {
-    if (now - (lastUpdate.get(tabId) || 0) > 65000) {
-      tracks.delete(tabId);
-      lastUpdate.delete(tabId);
-    }
-  }
-
+function pickAndSend(force) {
   var best = null;
   var bestTabId = null;
   for (const [tabId, track] of tracks) {
@@ -135,26 +139,88 @@ function pickAndSend() {
     }
   }
 
+  // Прилипчивость: новый играющий источник со звуком не перебивает уже
+  // играющий источник со звуком. Смена — только на строго более высокий ранг.
+  if (activeTabId != null && tracks.has(activeTabId)) {
+    var cur = tracks.get(activeTabId);
+    if (!best || trackWeight(cur) >= trackWeight(best)) { best = cur; bestTabId = activeTabId; }
+  }
+
   if (best) {
-    console.log('MW bg send thumb:', (best.data.thumbnail||'').slice(0,60), 'source:', best.source);
+    activeTabId = bestTabId;
     lastSource = best.source;
     currentTrackData = best.data;
+    lastSentKind = 'track';
     send(best.data);
-  } else if (tracks.size === 0) {
-    if (sentKey !== 'no_music') {
-      sentKey = 'no_music';
-      lastSource = '';
-      currentTrackData = { error: 'no_music' };
+  } else {
+    activeTabId = null;
+    lastSource = '';
+    currentTrackData = { error: 'no_music' };
+    var now = Date.now();
+    if (force || lastSentKind !== 'none' || now - lastNoMusicSent > 15000) {
+      lastNoMusicSent = now;
+      lastSentKind = 'none';
       send(currentTrackData);
     }
   }
+}
+
+const UPDATE_API_URL = 'https://api.github.com/repos/Stepanchikkk/music-widget-obs/releases/latest';
+const RELEASES_URL = 'https://github.com/Stepanchikkk/music-widget-obs/releases/latest';
+const UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+function cmpVersions(a, b) {
+  var pa = String(a).replace(/^v/i, '').split('.');
+  var pb = String(b).replace(/^v/i, '').split('.');
+  for (var i = 0; i < Math.max(pa.length, pb.length); i++) {
+    var x = parseInt(pa[i], 10) || 0;
+    var y = parseInt(pb[i], 10) || 0;
+    if (x > y) return 1;
+    if (x < y) return -1;
+  }
+  return 0;
+}
+
+function setUpdateBadge(has) {
+  try {
+    chrome.action.setBadgeText({ text: has ? '1' : '' });
+    if (has) chrome.action.setBadgeBackgroundColor({ color: '#e05252' });
+  } catch (e) {}
+}
+
+function checkForUpdate(force) {
+  return new Promise(function(resolve) {
+    chrome.storage.local.get({ updateAvailable: false, latestVersion: '', releaseUrl: RELEASES_URL, lastUpdateCheck: 0 }, function(items) {
+      var now = Date.now();
+      var cached = { updateAvailable: !!items.updateAvailable, latestVersion: items.latestVersion || '', releaseUrl: items.releaseUrl || RELEASES_URL };
+      if (!force && now - (items.lastUpdateCheck || 0) < UPDATE_INTERVAL_MS) {
+        setUpdateBadge(cached.updateAvailable);
+        resolve(cached);
+        return;
+      }
+      fetch(UPDATE_API_URL, { cache: 'no-store', headers: { 'Accept': 'application/vnd.github+json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(rel) {
+          var latest = (rel && rel.tag_name) ? String(rel.tag_name) : '';
+          var url = (rel && rel.html_url) ? String(rel.html_url) : RELEASES_URL;
+          var has = latest ? cmpVersions(latest, chrome.runtime.getManifest().version) > 0 : false;
+          chrome.storage.local.set({ updateAvailable: has, latestVersion: latest, releaseUrl: url, lastUpdateCheck: now });
+          setUpdateBadge(has);
+          resolve({ updateAvailable: has, latestVersion: latest, releaseUrl: url });
+        })
+        .catch(function() {
+          setUpdateBadge(cached.updateAvailable);
+          resolve(cached);
+        });
+    });
+  });
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'mediaSessionUpdate') {
     const tabId = sender.tab?.id;
     if (!tabId) return;
-    console.log('MW bg recv tab', tabId, 'thumb:', (msg.data.thumbnail||'').slice(0,60));
+    if (settingsReady) connect();
     chrome.tabs.get(tabId, () => {
       if (chrome.runtime.lastError) return;
       var prev = tracks.get(tabId);
@@ -169,21 +235,43 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         pausedAt = Date.now();
       else if (prev)
         pausedAt = prev.pausedAt || 0;
-      tracks.set(tabId, { data: data, source: getHostname(sender.tab?.url || ''), playingSince: playingSince, pausedAt: pausedAt });
+      tracks.set(tabId, {
+        data: data,
+        source: getHostname(sender.tab?.url || ''),
+        playingSince: playingSince,
+        pausedAt: pausedAt,
+        audible: prev ? prev.audible : undefined,
+        tabMuted: prev ? prev.tabMuted : undefined,
+        discarded: prev ? prev.discarded : false,
+        lastPing: prev ? prev.lastPing : 0
+      });
       lastUpdate.set(tabId, Date.now());
-      pickAndSend();
+      pickAndSend(false);
     });
     return;
   }
 
   if (msg.type === 'trackEnded') {
     const tabId = sender.tab?.id;
-    if (tabId) {
-      tracks.delete(tabId);
-      lastUpdate.delete(tabId);
+    if (tabId && tracks.has(tabId)) {
+      const ending = tracks.get(tabId);
+      clearTimeout(ending.removeTimer);
+      ending.removeTimer = setTimeout(() => {
+        if (tracks.get(tabId) !== ending) return;
+        tracks.delete(tabId);
+        lastUpdate.delete(tabId);
+        if (activeTabId === tabId) activeTabId = null;
+        pickAndSend(true);
+      }, 1500);
+    } else {
+      pickAndSend(true);
     }
-    pickAndSend();
     return;
+  }
+
+  if (msg.type === 'checkUpdate') {
+    checkForUpdate(false).then(function(res) { sendResponse(res); });
+    return true;
   }
 
   if (msg.type === 'getStatus') {
@@ -210,7 +298,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     ws = null;
     wsAuthenticated = false;
     wsConnecting = false;
-    sentKey = '';
+    connectFailures = 0;
     connect();
     sendResponse({ ok: true });
     return true;
@@ -219,9 +307,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'setStyle') {
     widgetStyle = msg.style;
     chrome.storage.local.set({ widgetStyle: msg.style });
-    sentKey = '';
-    sentTrackKey = '';
-    pickAndSend();
+    pickAndSend(true);
     sendResponse({ ok: true });
     return true;
   }
@@ -231,7 +317,9 @@ chrome.alarms.create('heartbeat', { periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'heartbeat') {
     connect();
-    if (currentTrackData) send(currentTrackData);
+    sweepTabs();
+    pickAndSend(true);
+    checkForUpdate(false);
   }
 });
 
@@ -242,17 +330,74 @@ function getHostname(url) {
 chrome.storage.local.get({ wsPort: DEFAULT_PORT, widgetStyle: 'classic' }, (items) => {
   wsPort = items.wsPort;
   widgetStyle = items.widgetStyle || 'classic';
+  settingsReady = true;
+  connect();
+  checkForUpdate(false);
 });
-
-connect();
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   if (tracks.has(tabId)) {
     tracks.delete(tabId);
     lastUpdate.delete(tabId);
-    pickAndSend();
+    if (activeTabId === tabId) activeTabId = null;
+    pickAndSend(true);
   }
 });
+
+// Обновления вкладки: выгрузка (discarded) и наличие звука. Навигацию здесь
+// не трогаем — иначе любой переход по странице даёт ложную заглушку.
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (!tracks.has(tabId)) return;
+  const track = tracks.get(tabId);
+  if (changeInfo.discarded === true) {
+    if (track.data.state === 'playing') { track.data.state = 'paused'; track.pausedAt = track.pausedAt || Date.now(); }
+    track.discarded = true;
+    pickAndSend(false);
+  }
+  if (changeInfo.audible !== undefined) track.audible = changeInfo.audible;
+  if (changeInfo.mutedInfo) track.tabMuted = !!changeInfo.mutedInfo.muted;
+});
+
+// Пока вкладка существует — держим её последнее состояние. Молчание не смерть.
+function sweepTabs() {
+  const now = Date.now();
+  tracks.forEach((track, tabId) => {
+    chrome.tabs.get(tabId).then((tab) => {
+      track.audible = !!tab.audible;
+      track.tabMuted = !!(tab.mutedInfo && tab.mutedInfo.muted);
+      track.discarded = !!tab.discarded;
+      if (track.discarded && track.data.state === 'playing') {
+        track.data.state = 'paused';
+        track.pausedAt = track.pausedAt || now;
+      }
+      if (now - (lastUpdate.get(tabId) || 0) > 4000) {
+        if (!track.audible && !track.tabMuted && track.data.state === 'playing') {
+          track.data.state = 'paused';
+          track.pausedAt = track.pausedAt || now;
+        }
+        pingTab(tabId, track, now);
+      }
+    }).catch(() => {
+      tracks.delete(tabId);
+      lastUpdate.delete(tabId);
+      if (activeTabId === tabId) activeTabId = null;
+    });
+  });
+}
+
+function pingTab(tabId, track, now) {
+  if (track.discarded) return;
+  if (now - (track.lastPing || 0) < 10000) return;
+  track.lastPing = now;
+  chrome.tabs.sendMessage(tabId, { type: 'ping' }).catch(() => {
+    chrome.scripting.executeScript({ target: { tabId: tabId }, files: ['content.js'] }).catch(() => {});
+  });
+}
+
+setInterval(() => {
+  sweepTabs();
+  pickAndSend(false);
+}, 4000);
 
 // Inject content.js into all existing tabs so they don't need F5
 function injectContent(tabs) {

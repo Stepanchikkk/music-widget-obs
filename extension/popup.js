@@ -7,6 +7,7 @@ const L10N = {
     step2: '\u041f\u043e\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0433\u0430\u043b\u043e\u0447\u043a\u0443 <strong>\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0441\u0435\u0440\u0432\u0435\u0440 WebSocket</strong>, \u0441\u043d\u0438\u043c\u0438\u0442\u0435 \u0433\u0430\u043b\u043e\u0447\u043a\u0443 <strong>\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0432\u0445\u043e\u0434 \u0432 \u0430\u043a\u043a\u0430\u0443\u043d\u0442</strong>, \u043f\u043e\u0440\u0442 <code>4455</code>, \u043d\u0430\u0436\u043c\u0438\u0442\u0435 <strong>OK</strong>',
     step3: '<strong>\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a</strong> \u2192 <strong>\u0411\u0440\u0430\u0443\u0437\u0435\u0440</strong> \u2192 <strong>\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u043d\u043e\u0432\u044b\u0439</strong> (\u043c\u043e\u0436\u043d\u043e \u0437\u0430\u0434\u0430\u0442\u044c \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435) \u2192 \u043f\u043e\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0433\u0430\u043b\u043e\u0447\u043a\u0443 <strong>\u041b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0444\u0430\u0439\u043b</strong> \u2192 \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 <code>widget.html</code> \u0438\u0437 \u043f\u0430\u043f\u043a\u0438 <code>music-widget-obs</code>',
     footer: '\u0420\u0435\u043f\u043e\u0437\u0438\u0442\u043e\u0440\u0438\u0439 \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u043d\u0430 GitHub',
+    updateBar: 'Доступно обновление {ver}',
     sectionTitle1: '\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u043a OBS',
     sectionTitle2: '\u0421\u0435\u0439\u0447\u0430\u0441 \u0438\u0433\u0440\u0430\u0435\u0442',
     sectionTitle3: '\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b WebSocket',
@@ -30,6 +31,7 @@ const L10N = {
     styleClassic: '\u041a\u043b\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043a\u0438\u0439',
     styleCompact: '\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439',
     styleGlass: '\u0421\u0442\u0435\u043a\u043b\u044f\u043d\u043d\u044b\u0439',
+    styleGlassCompact: 'Компактный стеклянный',
     styleMinimal: '\u041c\u0438\u043d\u0438\u043c\u0430\u043b\u0438\u0441\u0442\u0438\u0447\u043d\u044b\u0439',
     styleStereo: '\u041c\u0430\u0433\u043d\u0438\u0442\u043e\u043b\u0430',
     styleFallout: 'Fallout',
@@ -40,6 +42,7 @@ const L10N = {
     step2: 'Check <strong>Enable WebSocket server</strong>, uncheck <strong>Require Authentication</strong>, port <code>4455</code>, click <strong>OK</strong>',
     step3: '<strong>Add Source</strong> \u2192 <strong>Browser</strong> \u2192 <strong>Create New</strong> \u2192 check <strong>Local File</strong> \u2192 select <code>widget.html</code> from <code>music-widget-obs</code> folder',
     footer: 'Project repository on GitHub',
+    updateBar: 'Update {ver} available',
     sectionTitle1: 'OBS Connection',
     sectionTitle2: 'Now Playing',
     sectionTitle3: 'WebSocket Settings',
@@ -63,6 +66,7 @@ const L10N = {
     styleClassic: 'Classic',
     styleCompact: 'Compact',
     styleGlass: 'Glass',
+    styleGlassCompact: 'Compact Glass',
     styleMinimal: 'Minimal',
     styleStereo: 'Car Stereo',
     styleFallout: 'Fallout',
@@ -81,11 +85,14 @@ const langSwitch = document.getElementById('langSwitch');
 const styleDropdown = document.getElementById('styleDropdown');
 const styleSummary = document.getElementById('styleSummary');
 const styleOptions = document.getElementById('styleOptions');
+const updateBar = document.getElementById('updateBar');
+const updateText = document.getElementById('updateText');
 
 const STYLES = [
   { id: 'classic', key: 'styleClassic' },
   { id: 'compact', key: 'styleCompact' },
   { id: 'glass', key: 'styleGlass' },
+  { id: 'glass-compact', key: 'styleGlassCompact' },
   { id: 'minimal', key: 'styleMinimal' },
   { id: 'stereo', key: 'styleStereo' },
   { id: 'fallout', key: 'styleFallout' },
@@ -101,7 +108,19 @@ function T(key, vars) {
   return s;
 }
 
+function renderUpdateBar() {
+  if (!updateBar) return;
+  if (latestVersion) {
+    updateText.textContent = T('updateBar', { ver: latestVersion });
+    updateBar.classList.add('show');
+  } else {
+    updateBar.classList.remove('show');
+  }
+}
+
 let currentStyle = 'classic';
+let latestVersion = '';
+let releaseUrl = 'https://github.com/Stepanchikkk/music-widget-obs/releases/latest';
 let lastTrack = null;
 let lastConnected = false;
 
@@ -147,6 +166,7 @@ function applyLang() {
   langSwitch.textContent = lang === 'ru' ? 'EN' : 'RU';
   document.getElementById('styleSectionTitle').textContent = T('styleTitle');
   buildStyleOptions();
+  renderUpdateBar();
 }
 
 function loadLang() {
@@ -269,6 +289,19 @@ loadLang();
 initPreviewFrame();
 checkStatus();
 setInterval(checkStatus, 2000);
+
+if (updateBar) {
+  updateBar.addEventListener('click', () => { chrome.tabs.create({ url: releaseUrl }); });
+}
+chrome.runtime.sendMessage({ type: 'checkUpdate' }).then((res) => {
+  if (res && res.updateAvailable) {
+    latestVersion = res.latestVersion || '';
+    releaseUrl = res.releaseUrl || releaseUrl;
+  } else {
+    latestVersion = '';
+  }
+  renderUpdateBar();
+}).catch(() => {});
 
 chrome.storage.local.get({ widgetStyle: 'classic' }, (items) => {
   currentStyle = items.widgetStyle || 'classic';

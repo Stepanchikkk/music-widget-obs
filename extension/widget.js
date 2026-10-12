@@ -25,6 +25,8 @@ var marqueeItems = [];
 var marqueeGen = 0;
 var marqueeTimer = null;
 var placeholderEl = null, phStyle = null;
+var widgetReconnectDelay = 1000;
+var widgetReconnectTimer = null;
 
 function showPlaceholder(text) {
     if (!phStyle) {
@@ -72,7 +74,7 @@ function colors(img) {
 }
 
 function applyColors(d, l, forStyle) {
-    if (forStyle === 'glass' || forStyle === 'minimal') return;
+    if (forStyle === 'glass' || forStyle === 'glass-compact' || forStyle === 'minimal') return;
     var da = (d[0]+d[1]+d[2])/3;
     if (da > 90) d = [Math.max(d[0]*0.25,8)|0, Math.max(d[1]*0.25,8)|0, Math.max(d[2]*0.25,8)|0];
     widget.style.background = 'linear-gradient(135deg, rgba(' + d[0] + ',' + d[1] + ',' + d[2] + ',0.96), rgba(' + Math.min(d[0]+55,255) + ',' + Math.min(d[1]+55,255) + ',' + Math.min(d[2]+55,255) + ',0.92))';
@@ -83,7 +85,7 @@ function applyColors(d, l, forStyle) {
 }
 
 function resetColors(forStyle) {
-    if (forStyle === 'glass' || forStyle === 'minimal' || forStyle === 'stereo' || forStyle === 'fallout') {
+    if (forStyle === 'glass' || forStyle === 'glass-compact' || forStyle === 'minimal' || forStyle === 'stereo' || forStyle === 'fallout') {
         widget.style.background = '';
         widget.style.removeProperty('--accent-1');
         widget.style.removeProperty('--accent-2');
@@ -171,7 +173,7 @@ function cleanupMq() {
 
 function resetWatchdog() {
     if (watchDog) clearTimeout(watchDog);
-    watchDog = setTimeout(function() { showStatus(TXT[LANG].noMusic); }, 3000);
+    watchDog = setTimeout(function() { showStatus(TXT[LANG].noMusic); }, 30000);
 }
 
 function applyStyle(name) {
@@ -192,10 +194,9 @@ function applyStyle(name) {
 
 function handleTrackData(data) {
     if (!data) { showStatus(TXT[LANG].noMusic); return; }
-    console.log('MW widget recv thumb:', (data.thumbnail||'').slice(0,60), 'state:', data.state);
     if (!lockedStyle && data._style && data._style !== currentStyle) applyStyle(data._style);
     else if (!currentStyle) applyStyle('classic');
-    if (data.error) { showStatus(TXT[LANG].noMusic); return; }
+    if (data.error) { lastTrackData = null; showStatus(TXT[LANG].noMusic); return; }
     lastTrackData = data;
     widget.classList.add('active');
     widget.classList.remove('no-track');
@@ -229,17 +230,27 @@ async function connectObsWebSocket() {
                 if (msg.op === 0) {
                     var identify = { op: 1, d: { rpcVersion: 1, eventSubscriptions: 0x7FFFFFFF } };
                     wsWidget.send(JSON.stringify(identify));
-                } else if (msg.op === 2) { wsWidgetConnected = true;
+                } else if (msg.op === 2) { wsWidgetConnected = true; widgetReconnectDelay = 1000;
+                    setTimeout(function() { if (!lastTrackData && !widget.classList.contains('no-track')) showStatus(TXT[LANG].noMusic); }, 2000);
                 } else if (msg.op === 5 && msg.d.eventType === 'CustomEvent') { handleTrackData(msg.d.eventData); }
             } catch(e) {}
         };
         wsWidget.onclose = function() {
             wsWidget = null; wsWidgetConnected = false;
             showStatus(TXT[LANG].waiting);
-            connectObsWebSocket();
+            scheduleWidgetConnect();
         };
         wsWidget.onerror = function() { if (wsWidget) { try { wsWidget.close(); } catch(e) {} } };
-    } catch(e) { connectObsWebSocket(); }
+    } catch(e) { scheduleWidgetConnect(); }
+}
+
+function scheduleWidgetConnect() {
+    if (widgetReconnectTimer) return;
+    widgetReconnectTimer = setTimeout(function() {
+        widgetReconnectTimer = null;
+        connectObsWebSocket();
+    }, widgetReconnectDelay);
+    widgetReconnectDelay = Math.min(widgetReconnectDelay * 2, 3000);
 }
 
 orient();
