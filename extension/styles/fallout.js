@@ -285,8 +285,8 @@ css += '.fallout-meta-label{font-size:6.5em;color:#1a7a1a;text-transform:upperca
         E.trackLabel.innerHTML = ICON_PLAY + ' TRACK';
         E.playCtrl.innerHTML = ICON_PLAY;
         E.progressFill.style.width = '0%';
-        E.timeElapsed.textContent = '00:00';
-        E.timeRemaining.textContent = '-00:00';
+        E.timeElapsed.textContent = data.currentTime > 0 ? fmt2(data.currentTime) : '00:00';
+        E.timeRemaining.textContent = '';
         E.artworkImg.classList.remove('visible');
         E.artworkNoimg.style.display = 'flex';
         E.spectrum.classList.remove('playing');

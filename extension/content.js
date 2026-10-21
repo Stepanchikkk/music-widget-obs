@@ -76,6 +76,32 @@ function readDomTiming() {
 }
 
 function readDomMedia() {
+  // The-Radio.ru: свой плеер "bird", mediaSession не использует.
+  if (location.hostname.indexOf('the-radio.ru') !== -1) {
+    const zone = document.querySelector('.pla-title-zone');
+    if (!zone) return null;
+    const alone = zone.querySelector('.pla-alone');
+    const artistNode = zone.querySelector('.pla-artist');
+    const songNode = zone.querySelector('.pla-song');
+    const img = document.querySelector('.pla-control .pla-ava img');
+    const rTitle = alone ? alone.textContent.trim() : (songNode ? songNode.textContent.trim() : '');
+    const rArtist = artistNode ? artistNode.textContent.trim() : '';
+    if (!rTitle && !rArtist) return null;
+    const nameEl = document.querySelector('.pla-info .pla-name');
+    var station = nameEl ? nameEl.textContent.trim() : '';
+    if (!station || station === 'Выберите радиостанцию') {
+      var curLink = document.querySelector('.simmyradio__current[data-r-name]');
+      station = curLink ? (curLink.getAttribute('data-r-name') || '') : '';
+    }
+    if (!station && document.title) {
+      station = document.title.indexOf('|') !== -1 ? document.title.split('|').pop().trim() : (document.title.split('—')[0] || '').trim();
+    }
+    const cast = document.querySelector('.pla-cast');
+    const isPlaying = cast ? (cast.classList.contains('pla-cast--stop') || cast.classList.contains('pla-cast--load')) : false;
+    // Иконка громкости у сайта бывает в mute при реально играющем звуке
+    // (volume 0.02 + audible), поэтому приоритет радио не занижаем.
+    return { title: rTitle, artist: rArtist, album: station, artwork: img ? img.src : '', state: isPlaying ? 'playing' : 'paused', muted: false };
+  }
   const titleEl = document.querySelector('[data-testid="context-item-info-title"]');
   const artistEl = document.querySelector('[data-testid="context-item-info-artist"]');
   if (!titleEl || !artistEl) return null;
@@ -95,8 +121,10 @@ function pickPrimaryMedia() {
   var best = null, bestScore = -1;
   for (var i = 0; i < els.length; i++) {
     var el = els[i];
+    if (location.hostname.indexOf('the-radio.ru') !== -1 && el.id === 'hlsplay') continue;
     // Живые потоки (Twitch и т.п.) имеют duration Infinity/NaN — их тоже надо
     // рассматривать, иначе главным станет доигравший декоративный элемент.
+    if (isPreviewVideo(el)) continue;
     if (!el.currentSrc && el.readyState === 0) continue;
     var d = el.duration;
     var finite = isFinite(d) && d > 0;
@@ -129,6 +157,8 @@ function isYTAd(data) {
 }
 
 let nullCount = 0;
+var radioLog = [];
+let ghostCount = 0;
 var thumbDataUrlCache = {};
 var lastPausedTime = -1;
 if (!window.__mwUnloadBound) {
@@ -138,12 +168,81 @@ if (!window.__mwUnloadBound) {
   });
 }
 
+function isYouTubeNonWatch() {
+  if (location.hostname.indexOf('youtube.com') === -1) return false;
+  return !/^\/(watch|shorts|live|embed)\b/.test(location.pathname);
+}
+
+function isPreviewVideo(el) {
+  if (!el || el.tagName !== 'VIDEO') return false;
+  try {
+    return !!el.closest('ytd-video-preview, #inline-preview-player, .ytp-inline-preview, ytd-thumbnail-overlay-inline-player');
+  } catch (e) { return false; }
+}
+
+function isGhostMedia(el) {
+  if (!el) return isYouTubeNonWatch() && !readDomMedia();
+  if (el.tagName !== 'VIDEO') return false;
+  if (!el.paused || el.ended) return false;
+  if (el.videoWidth > 0 || el.videoHeight > 0) return false;
+  var r = el.getBoundingClientRect();
+  if (r.width > 1 || r.height > 1) return false;
+  if (readDomMedia()) return false;
+  if (isYouTubeNonWatch()) return true;
+  if (el.currentTime > 0.001) return false;
+  var ms = navigator.mediaSession;
+  return !ms || ms.playbackState === 'none';
+}
+
+function theRadioDiag() {
+  if (location.hostname.indexOf('the-radio.ru') === -1) return null;
+  var q = function(s) { var e = document.querySelector(s); return e; };
+  var cast = q('.pla-cast'), vol = q('.pla-vol-ico'), zone = q('.pla-title-zone');
+  var hls = document.getElementById('hlsplay');
+  return {
+    cast: cast ? cast.className : '',
+    vol: vol ? vol.className : '',
+    zone: zone ? zone.innerText : '',
+    alone: q('.pla-alone') ? q('.pla-alone').textContent : '',
+    artist: q('.pla-artist') ? q('.pla-artist').textContent : '',
+    song: q('.pla-song') ? q('.pla-song').textContent : '',
+    name: q('.pla-info .pla-name') ? q('.pla-info .pla-name').textContent : '',
+    min: q('#pla-min') ? q('#pla-min').textContent : '',
+    sec: q('#pla-sec') ? q('#pla-sec').textContent : '',
+    hls: hls ? { paused: hls.paused, readyState: hls.readyState, duration: isFinite(hls.duration) ? hls.duration : String(hls.duration), currentTime: hls.currentTime } : null
+  };
+}
+
+function buildDiag() {
+  var ms = navigator.mediaSession;
+  var meta = ms && ms.metadata;
+  var list = [];
+  var els = document.querySelectorAll('video, audio');
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    var r = el.getBoundingClientRect();
+    list.push({ tag: el.tagName, id: el.id || '', cls: (typeof el.className === 'string' ? el.className : '').slice(0, 60), paused: !!el.paused, ended: !!el.ended, muted: !!el.muted, volume: el.volume, duration: isFinite(el.duration) ? el.duration : String(el.duration), currentTime: el.currentTime, readyState: el.readyState, src: (el.currentSrc || el.src || '').slice(0, 120), w: Math.round(r.width), h: Math.round(r.height) });
+  }
+  var p = pickPrimaryMedia();
+  return {
+    url: location.href, path: location.pathname, visibility: document.visibilityState, polling: !!window.__mwContentInterval,
+    mediaSession: ms ? { playbackState: ms.playbackState, hasMetadata: !!meta, title: (meta && meta.title) || '', artist: (meta && meta.artist) || '', album: (meta && meta.album) || '', artworkCount: (meta && meta.artwork) ? meta.artwork.length : 0 } : null,
+    domMedia: readDomMedia(),
+    primary: p ? { tag: p.tagName, id: p.id || '', paused: !!p.paused, ended: !!p.ended, muted: !!p.muted, duration: isFinite(p.duration) ? p.duration : String(p.duration), currentTime: p.currentTime, readyState: p.readyState } : null,
+    theRadio: theRadioDiag(),
+    radioLog: radioLog.slice(),
+    media: list
+  };
+}
+
 if (!window.__mwPingBound) {
   window.__mwPingBound = true;
   chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     if (msg && msg.type === 'ping') {
       if (!window.__mwContentInterval && window.__mwContentStart) window.__mwContentStart();
       sendResponse({ ok: true, polling: !!window.__mwContentInterval });
+    } else if (msg && msg.type === 'diag') {
+      sendResponse(buildDiag());
     }
   });
 }
@@ -214,6 +313,7 @@ function tick() {
       data = readDomMedia();
     }
     if (!data) {
+      if (location.hostname.indexOf('the-radio.ru') !== -1) { radioLog.push({ t: Date.now(), path: location.pathname, cast: (document.querySelector('.pla-cast') || {}).className || '', state: null, title: '' }); if (radioLog.length > 30) radioLog.shift(); }
       nullCount++;
       if (nullCount >= 10) {
         chrome.runtime.sendMessage({ type: 'trackEnded' }).catch(() => {});
@@ -221,14 +321,33 @@ function tick() {
       }
       return;
     }
-    nullCount = 0;
     var primary = pickPrimaryMedia();
+    if (isGhostMedia(primary)) {
+      ghostCount++;
+      if (ghostCount >= 3) {
+        ghostCount = 0;
+        chrome.runtime.sendMessage({ type: 'trackEnded' }).catch(() => {});
+      }
+      return;
+    }
+    ghostCount = 0;
+    nullCount = 0;
     if (primary) data.state = primary.paused ? 'paused' : 'playing';
     if (isYTAd(data)) return;
 
     const timing = readTiming() || (primary && isFinite(primary.duration) && primary.duration > 0 ? { currentTime: primary.currentTime, duration: primary.duration } : null) || readVideoTiming() || readDomTiming();
     var curTime = timing?.currentTime || 0;
     var dur = timing?.duration || 0;
+    // The-Radio.ru — живой поток: duration/currentTime HLS-элемента не про песню.
+    // Берём текущее время из счётчика плеера (#pla-min/#pla-sec), общего нет.
+    if (location.hostname.indexOf('the-radio.ru') !== -1) {
+      var mn = document.querySelector('#pla-min');
+      var sc = document.querySelector('#pla-sec');
+      curTime = (mn ? (parseInt(mn.textContent, 10) || 0) : 0) * 60 + (sc ? (parseInt(sc.textContent, 10) || 0) : 0);
+      dur = 0;
+      radioLog.push({ t: Date.now(), path: location.pathname, cast: (document.querySelector('.pla-cast') || {}).className || '', state: data.state, title: data.title || '', cur: curTime });
+      if (radioLog.length > 30) radioLog.shift();
+    }
 
     if (data.state === 'paused') {
       if (lastPausedTime < 0) lastPausedTime = curTime;
@@ -236,6 +355,8 @@ function tick() {
     } else {
       lastPausedTime = -1;
     }
+    // Радио: таймер берём из DOM каждый тик, чтобы он шёл ровно как в плеере (в т.ч. на паузе).
+    if (location.hostname.indexOf('the-radio.ru') !== -1) lastPausedTime = -1;
 
     var thumb = data.artwork || '';
 
@@ -279,7 +400,7 @@ function tick() {
       album: data.album,
       thumbnail: thumb,
       state: data.state,
-      muted: primary ? (primary.muted || primary.volume === 0) : isMuted(),
+      muted: (data.muted !== undefined) ? data.muted : (primary ? (primary.muted || primary.volume === 0) : isMuted()),
       currentTime: curTime,
       duration: dur,
       ts: Date.now()

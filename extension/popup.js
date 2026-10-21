@@ -85,6 +85,7 @@ const langSwitch = document.getElementById('langSwitch');
 const styleDropdown = document.getElementById('styleDropdown');
 const styleSummary = document.getElementById('styleSummary');
 const styleOptions = document.getElementById('styleOptions');
+const diagLink = document.getElementById('diagLink');
 const updateBar = document.getElementById('updateBar');
 const updateText = document.getElementById('updateText');
 
@@ -157,6 +158,7 @@ function applyLang() {
   document.querySelectorAll('.step-text')[1].innerHTML = T('step2');
   document.querySelectorAll('.step-text')[2].innerHTML = T('step3');
   document.querySelector('.footer-link a').textContent = T('footer');
+  if (diagLink) diagLink.textContent = T('diagLink');
   document.querySelectorAll('.section-title')[0].textContent = T('sectionTitle1');
   document.querySelectorAll('.section-title')[1].textContent = T('sectionTitle2');
   document.querySelectorAll('.section-title')[2].textContent = T('sectionTitle3');
@@ -289,6 +291,22 @@ loadLang();
 initPreviewFrame();
 checkStatus();
 setInterval(checkStatus, 2000);
+
+if (diagLink) {
+  diagLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+      const diag = await chrome.runtime.sendMessage({ type: 'collectDiag' });
+      const blob = new Blob([JSON.stringify(diag, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'music-widget-diag.json';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (err) {}
+  });
+}
 
 if (updateBar) {
   updateBar.addEventListener('click', () => { chrome.tabs.create({ url: releaseUrl }); });

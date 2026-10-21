@@ -16,6 +16,7 @@ let connectFailures = 0;
 let lastNoMusicSent = 0;
 let lastSentKind = '';
 let settingsReady = false;
+let sentLog = [];
 
 function scheduleConnect() {
   if (reconnectTimer) return;
@@ -103,6 +104,8 @@ function connect() {
 function send(data) {
   if (!ws || ws.readyState !== WebSocket.OPEN || !wsAuthenticated) return;
   data._style = widgetStyle;
+  sentLog.push({ at: Date.now(), title: data.title || '', artist: data.artist || '', state: data.state || '', error: data.error || '', thumbLen: (data.thumbnail || '').length });
+  if (sentLog.length > 8) sentLog.shift();
 
   try {
     ws.send(JSON.stringify({
@@ -216,6 +219,39 @@ function checkForUpdate(force) {
   });
 }
 
+function summarizeTrack(d) {
+  if (!d) return null;
+  var o = {};
+  for (var k in d) {
+    if (k === 'thumbnail') o.thumbLen = (d.thumbnail || '').length;
+    else o[k] = d[k];
+  }
+  return o;
+}
+
+function collectDiag() {
+  var out = {
+    version: chrome.runtime.getManifest().version,
+    ws: { open: !!(ws && ws.readyState === WebSocket.OPEN), auth: wsAuthenticated, connecting: wsConnecting, error: lastError, port: wsPort },
+    activeTabId: activeTabId,
+    currentTrackData: summarizeTrack(currentTrackData),
+    lastSentKind: lastSentKind,
+    sentLog: sentLog.slice(),
+    tracks: [],
+    snapshots: []
+  };
+  var ids = [];
+  tracks.forEach(function(t, id) {
+    ids.push(id);
+    out.tracks.push({ tabId: id, source: t.source, state: t.data.state, muted: t.data.muted, title: t.data.title, artist: t.data.artist, album: t.data.album, duration: t.data.duration, currentTime: t.data.currentTime, thumbLen: (t.data.thumbnail || '').length, audible: !!t.audible, tabMuted: !!t.tabMuted, discarded: !!t.discarded, ageMs: Date.now() - (lastUpdate.get(id) || 0), active: id === activeTabId });
+  });
+  return Promise.all(ids.map(function(id) {
+    return chrome.tabs.sendMessage(id, { type: 'diag' })
+      .then(function(d) { return { tabId: id, diag: d === undefined ? 'no diag handler (old content script?)' : d }; })
+      .catch(function(e) { return { tabId: id, diag: 'ERR: ' + (e && e.message ? e.message : 'no response') }; });
+  })).then(function(snaps) { out.snapshots = snaps; return out; });
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'mediaSessionUpdate') {
     const tabId = sender.tab?.id;
@@ -267,6 +303,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       pickAndSend(true);
     }
     return;
+  }
+
+  if (msg.type === 'collectDiag') {
+    collectDiag().then(function(d) { sendResponse(d); });
+    return true;
   }
 
   if (msg.type === 'checkUpdate') {

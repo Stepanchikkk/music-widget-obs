@@ -58,7 +58,7 @@ S.classic = {
             E.timingEl.textContent = fmt(adj) + ' / ' + fmt(data.duration);
             E.progressFill.style.width = Math.min(adj/data.duration*100, 100) + '%';
             if (data.state !== 'paused') tick(adj, data.duration, E.timingEl, E.progressFill);
-        } else { E.timingEl.textContent = ''; E.progressFill.style.width = '0%'; }
+        } else { E.timingEl.textContent = data.currentTime > 0 ? fmt(data.currentTime) : ''; E.progressFill.style.width = '0%'; }
     },
     showStatus: function(text) {
         if (!E) return;
