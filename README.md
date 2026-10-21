@@ -107,7 +107,7 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 ### Стили оформления
 
-Виджет поддерживает 6 стилей: `classic` (классический), `compact` (компактный), `glass` (стеклянный), `minimal` (минималистичный), `stereo` (магнитола), `fallout` (PIP-Boy).
+Виджет поддерживает 7 стилей: `classic` (классический), `compact` (компактный), `glass` (стеклянный), `glass-compact` (компактный стеклянный), `minimal` (минималистичный), `stereo` (магнитола), `fallout` (PIP-Boy).
 
 <p align="center">
   <img src="screenshots/preview-classic.png" alt="Классический" width="450"><br>
@@ -122,6 +122,11 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 <p align="center">
   <img src="screenshots/preview-glass.png" alt="Стеклянный" width="450"><br>
   <strong>Стеклянный (<code>glass</code>)</strong>
+</p>
+
+<p align="center">
+  <img src="screenshots/preview-glass-compact.png" alt="Компактный стеклянный" width="450"><br>
+  <strong>Компактный стеклянный (<code>glass-compact</code>)</strong>
 </p>
 
 <p align="center">
