@@ -4,7 +4,7 @@ const L10N = {
   ru: {
     title: 'Music Widget OBS',
     step1: '<strong>\u0421\u0435\u0440\u0432\u0438\u0441</strong> \u2192 <strong>\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0441\u0435\u0440\u0432\u0435\u0440\u0430 WebSocket</strong>',
-    step2: '\u041f\u043e\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0433\u0430\u043b\u043e\u0447\u043a\u0443 <strong>\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0441\u0435\u0440\u0432\u0435\u0440 WebSocket</strong>, \u0441\u043d\u0438\u043c\u0438\u0442\u0435 \u0433\u0430\u043b\u043e\u0447\u043a\u0443 <strong>\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0432\u0445\u043e\u0434 \u0432 \u0430\u043a\u043a\u0430\u0443\u043d\u0442</strong>, \u043f\u043e\u0440\u0442 <code>4455</code>, \u043d\u0430\u0436\u043c\u0438\u0442\u0435 <strong>OK</strong>',
+    step2: 'Поставьте галочку <strong>Включить сервер WebSocket</strong>, порт <code>4455</code>. Если включён пароль — введите его в параметрах WebSocket ниже.',
     step3: '<strong>\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a</strong> \u2192 <strong>\u0411\u0440\u0430\u0443\u0437\u0435\u0440</strong> \u2192 <strong>\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u043d\u043e\u0432\u044b\u0439</strong> (\u043c\u043e\u0436\u043d\u043e \u0437\u0430\u0434\u0430\u0442\u044c \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435) \u2192 \u043f\u043e\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0433\u0430\u043b\u043e\u0447\u043a\u0443 <strong>\u041b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0444\u0430\u0439\u043b</strong> \u2192 \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 <code>widget.html</code> \u0438\u0437 \u043f\u0430\u043f\u043a\u0438 <code>music-widget-obs</code>',
     footer: '\u0420\u0435\u043f\u043e\u0437\u0438\u0442\u043e\u0440\u0438\u0439 \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u043d\u0430 GitHub',
     updateBar: 'Доступно обновление {ver}',
@@ -18,7 +18,8 @@ const L10N = {
     statusDisconnected: 'WebSocket: \u043d\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0451\u043d',
     statusConnecting: 'WebSocket: \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435...',
     statusChecking: '\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430...',
-    auth_required: '\u0412 OBS \u0432\u043a\u043b\u044e\u0447\u0451\u043d \u0432\u0445\u043e\u0434 \u0432 \u0430\u043a\u043a\u0430\u0443\u043d\u0442 (\u0430\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f). \u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u0421\u0435\u0440\u0432\u0438\u0441 \u2192 \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0441\u0435\u0440\u0432\u0435\u0440\u0430 WebSocket \u0438 \u0441\u043d\u0438\u043c\u0438\u0442\u0435 \u0433\u0430\u043b\u043e\u0447\u043a\u0443 "\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0432\u0445\u043e\u0434 \u0432 \u0430\u043a\u043a\u0430\u0443\u043d\u0442"',
+    auth_required: 'OBS требует пароль. Включите «Использовать пароль» и введите пароль WebSocket в параметрах ниже.',
+    auth_failed: 'Неверный пароль OBS WebSocket. Проверьте пароль в параметрах ниже.',
     connection_error: '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u044c\u0441\u044f \u043a OBS. \u0423\u0431\u0435\u0434\u0438\u0442\u0435\u0441\u044c \u0447\u0442\u043e OBS \u0437\u0430\u043f\u0443\u0449\u0435\u043d \u0438 WebSocket \u0441\u0435\u0440\u0432\u0435\u0440 \u0432\u043a\u043b\u044e\u0447\u0451\u043d, \u043f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u043f\u043e\u0440\u0442',
     timeout: 'OBS \u043d\u0435 \u043e\u0442\u0432\u0435\u0447\u0430\u0435\u0442. \u0423\u0431\u0435\u0434\u0438\u0442\u0435\u0441\u044c \u0447\u0442\u043e OBS \u0437\u0430\u043f\u0443\u0449\u0435\u043d \u0438 WebSocket \u0441\u0435\u0440\u0432\u0435\u0440 \u0432\u043a\u043b\u044e\u0447\u0451\u043d, \u043f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u043f\u043e\u0440\u0442',
     send_failed: '\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0442\u043f\u0440\u0430\u0432\u043a\u0438 \u0434\u0430\u043d\u043d\u044b\u0445. \u041f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u043f\u043e\u0440\u0442 WebSocket \u0441\u0435\u0440\u0432\u0435\u0440\u0430',
@@ -39,7 +40,7 @@ const L10N = {
   en: {
     title: 'Music Widget OBS',
     step1: '<strong>Services</strong> \u2192 <strong>WebSocket Server Settings</strong>',
-    step2: 'Check <strong>Enable WebSocket server</strong>, uncheck <strong>Require Authentication</strong>, port <code>4455</code>, click <strong>OK</strong>',
+    step2: 'Check <strong>Enable WebSocket server</strong>, port <code>4455</code>. If a password is enabled, enter it in the WebSocket settings below.',
     step3: '<strong>Add Source</strong> \u2192 <strong>Browser</strong> \u2192 <strong>Create New</strong> \u2192 check <strong>Local File</strong> \u2192 select <code>widget.html</code> from <code>music-widget-obs</code> folder',
     footer: 'Project repository on GitHub',
     updateBar: 'Update {ver} available',
@@ -53,7 +54,8 @@ const L10N = {
     statusDisconnected: 'WebSocket: disconnected',
     statusConnecting: 'WebSocket: connecting...',
     statusChecking: 'Checking...',
-    auth_required: 'OBS has authentication enabled. Open Services \u2192 WebSocket Server Settings and uncheck Require Authentication',
+    auth_required: 'OBS requires a password. Enable "Use password" and enter the WebSocket password below.',
+    auth_failed: 'Wrong OBS WebSocket password. Check it in the settings below.',
     connection_error: 'Failed to connect to OBS. Make sure OBS is running and WebSocket server is enabled, check the port',
     timeout: 'OBS is not responding. Make sure OBS is running and WebSocket server is enabled, check the port',
     send_failed: 'Failed to send data. Check the WebSocket server port',
@@ -81,6 +83,10 @@ const trackSection = document.getElementById('trackSection');
 const trackSectionTitle = document.getElementById('trackSectionTitle');
 const trackSource = document.getElementById('trackSource');
 const saveBtn = document.getElementById('saveBtn');
+const portInput = document.getElementById('portInput');
+const usePasswordInput = document.getElementById('usePassword');
+const passwordInput = document.getElementById('passwordInput');
+const passwordRow = document.getElementById('passwordRow');
 const langSwitch = document.getElementById('langSwitch');
 const styleDropdown = document.getElementById('styleDropdown');
 const styleSummary = document.getElementById('styleSummary');
@@ -216,6 +222,7 @@ function updateStatus(status) {
     const d = status.debug;
     let msg = d && d.error ? d.error : (status.reason || '');
     if (msg === 'auth_required') msg = T('auth_required');
+    else if (msg === 'auth_failed') msg = T('auth_failed');
     else if (msg === 'connection_error') msg = T('connection_error') + ' (' + (d ? d.port : '') + ')';
     else if (msg === 'timeout') msg = T('timeout') + ' (' + (d ? d.port : '') + ')';
     else if (msg === 'send_failed') msg = T('send_failed');
@@ -247,24 +254,36 @@ async function checkStatus() {
 }
 
 function loadSettings() {
-  chrome.storage.local.get({ wsPort: '4455' }, (items) => {
+  chrome.storage.local.get({ wsPort: '4455', wsPassword: '', usePassword: false }, (items) => {
     portInput.value = items.wsPort;
+    usePasswordInput.checked = !!items.usePassword;
+    passwordInput.value = items.wsPassword || '';
+    passwordRow.style.display = items.usePassword ? 'flex' : 'none';
   });
 }
 
 function saveSettings() {
   const port = portInput.value.trim() || '4455';
-  chrome.storage.local.set({ wsPort: port }, () => {
+  const usePassword = usePasswordInput.checked;
+  const wsPassword = passwordInput.value;
+  chrome.storage.local.set({ wsPort: port, wsPassword, usePassword }, () => {
     statusDot.className = 'dot connecting';
     statusText.textContent = T('statusConnecting');
     statusHint.textContent = '';
-    chrome.runtime.sendMessage({ type: 'reconnect', wsPort: port });
+    chrome.runtime.sendMessage({ type: 'reconnect', wsPort: port, wsPassword, usePassword });
   });
 }
 
 saveBtn.addEventListener('click', saveSettings);
 
 portInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') saveSettings();
+});
+
+usePasswordInput.addEventListener('change', () => {
+  passwordRow.style.display = usePasswordInput.checked ? 'flex' : 'none';
+});
+passwordInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') saveSettings();
 });
 

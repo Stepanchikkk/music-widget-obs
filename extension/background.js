@@ -5,6 +5,60 @@ let wsConnecting = false;
 let lastError = '';
 let wsPort = DEFAULT_PORT;
 let widgetStyle = 'classic';
+let wsPassword = '';
+let usePassword = false;
+const obsPending = new Map();
+let obsReqId = 0;
+
+async function sha256b64(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  const bytes = new Uint8Array(buf);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+async function computeAuth(password, salt, challenge) {
+  const secret = await sha256b64(password + salt);
+  return await sha256b64(secret + challenge);
+}
+function obsRequest(requestType, requestData) {
+  return new Promise((resolve, reject) => {
+    if (!ws || ws.readyState !== WebSocket.OPEN || !wsAuthenticated) { reject(new Error('not connected')); return; }
+    const requestId = 'bg' + (++obsReqId);
+    obsPending.set(requestId, { resolve, reject });
+    try { ws.send(JSON.stringify({ op: 6, d: { requestType, requestId, requestData: requestData || {} } })); }
+    catch (e) { obsPending.delete(requestId); reject(e); return; }
+    setTimeout(() => { if (obsPending.has(requestId)) { obsPending.delete(requestId); reject(new Error('timeout ' + requestType)); } }, 5000);
+  });
+}
+async function b64utf8(s) {
+  const bytes = new TextEncoder().encode(s);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+async function injectWidgetConfig() {
+  if (!wsAuthenticated) return;
+  let list;
+  try { list = (await obsRequest('GetInputList')).responseData; } catch (e) { return; }
+  const inputs = (list && list.inputs) || [];
+  const pass = (usePassword && wsPassword) ? await b64utf8(wsPassword) : '';
+  const port = String(wsPort).replace(/[^0-9]/g, '');
+  for (const inp of inputs) {
+    if (inp.inputKind !== 'browser_source') continue;
+    let settings;
+    try { settings = (await obsRequest('GetInputSettings', { inputName: inp.inputName })).responseData; } catch (e) { continue; }
+    const s = (settings && settings.inputSettings) || {};
+    const lf = (String(s.local_file || '') + ' ' + String(s.url || '')).toLowerCase();
+    if (lf.indexOf('widget.html') === -1) continue;
+    let css = String(s.css || '');
+    css = css.replace(/\/\*mw-obs\*\/[^]*?}/g, '');
+    css += '\n/*mw-obs*/:root{--obs-ws-port:' + port + ';--obs-ws-password-b64:"' + pass + '";}';
+    try { await obsRequest('SetInputSettings', { inputName: inp.inputName, inputSettings: { css }, overlay: true }); } catch (e) {}
+    try { await obsRequest('PressInputPropertiesButton', { inputName: inp.inputName, propertyName: 'refreshnocache' }); } catch (e) {}
+  }
+}
+
 
 const tracks = new Map();
 const lastUpdate = new Map();
@@ -50,10 +104,20 @@ function connect() {
         const identify = { op: 1, d: { rpcVersion: serverRpcVersion, eventSubscriptions: 0x7FFFFFFF } };
 
         if (msg.d.authentication) {
-          lastError = 'auth_required';
-          sock.close();
-          if (ws === sock) { ws = null; wsConnecting = false; }
-          return;
+          if (!usePassword || !wsPassword) {
+            lastError = 'auth_required';
+            sock.close();
+            if (ws === sock) { ws = null; wsConnecting = false; }
+            return;
+          }
+          try {
+            identify.d.authentication = await computeAuth(wsPassword, msg.d.authentication.salt, msg.d.authentication.challenge);
+          } catch (e) {
+            lastError = 'auth_required';
+            sock.close();
+            if (ws === sock) { ws = null; wsConnecting = false; }
+            return;
+          }
         }
 
         try { sock.send(JSON.stringify(identify)); } catch (e) {
@@ -66,7 +130,13 @@ function connect() {
         wsConnecting = false;
         connectFailures = 0;
         lastError = '';
+        injectWidgetConfig();
         pickAndSend(true);
+      } else if (msg.op === 7) {
+        const p = obsPending.get(msg.d.requestId);
+        if (p) { obsPending.delete(msg.d.requestId); p.resolve(msg.d); }
+      } else if (msg.op === 5) {
+        if (msg.d.eventType === 'InputCreated') injectWidgetConfig();
       }
     } catch (e) {}
   };
@@ -76,7 +146,8 @@ function connect() {
     ws = null;
     wsAuthenticated = false;
     wsConnecting = false;
-    if (event.code && event.code !== 1000 && event.code !== 1006) lastError = 'close_' + event.code;
+    if (event.code === 4009) lastError = 'auth_failed';
+    else if (event.code && event.code !== 1000 && event.code !== 1006) lastError = 'close_' + event.code;
     if (!lastError && event.code !== 1000) lastError = 'connection_error';
     scheduleConnect();
   };
@@ -335,6 +406,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (msg.type === 'reconnect') {
     if (msg.wsPort !== undefined) wsPort = msg.wsPort;
+    if (msg.wsPassword !== undefined) wsPassword = msg.wsPassword;
+    if (msg.usePassword !== undefined) usePassword = !!msg.usePassword;
     if (ws) { try { ws.close(); } catch (e) {} }
     ws = null;
     wsAuthenticated = false;
@@ -368,9 +441,11 @@ function getHostname(url) {
   try { return new URL(url).hostname; } catch { return ''; }
 }
 
-chrome.storage.local.get({ wsPort: DEFAULT_PORT, widgetStyle: 'classic' }, (items) => {
+chrome.storage.local.get({ wsPort: DEFAULT_PORT, widgetStyle: 'classic', wsPassword: '', usePassword: false }, (items) => {
   wsPort = items.wsPort;
   widgetStyle = items.widgetStyle || 'classic';
+  wsPassword = items.wsPassword || '';
+  usePassword = !!items.usePassword;
   settingsReady = true;
   connect();
   checkForUpdate(false);

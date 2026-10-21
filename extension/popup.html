@@ -124,7 +124,7 @@
     font-size: 12px;
     color: #888;
   }
-  .field-row input[type="text"] {
+  .field-row input[type="text"], .field-row input[type="password"] {
     flex: 1;
     padding: 6px 10px;
     background: rgba(255,255,255,0.06);
@@ -340,6 +340,15 @@
         <label>Порт</label>
         <input type="text" id="portInput" placeholder="4455">
       </div>
+      <div class="field-row">
+        <label>Пароль</label>
+        <input type="checkbox" id="usePassword" style="width:auto;flex:none;margin:0;">
+        <span style="font-size:12px;color:#888;">использовать</span>
+      </div>
+      <div class="field-row" id="passwordRow" style="display:none;">
+        <label></label>
+        <input type="password" id="passwordInput" placeholder="Пароль OBS WebSocket">
+      </div>
       <div class="btn-row">
         <button class="btn btn-primary" id="saveBtn">Применить и переподключиться</button>
       </div>
@@ -363,7 +372,7 @@
     </div>
     <div class="step">
       <div class="step-num">2</div>
-      <div class="step-text">Поставьте галочку <strong>Включить сервер WebSocket</strong>, снимите галочку <strong>Включить вход в аккаунт</strong>, порт <code>4455</code>, нажмите <strong>OK</strong></div>
+      <div class="step-text">Поставьте галочку <strong>Включить сервер WebSocket</strong>, порт <code>4455</code>. Если включён пароль — введите его в параметрах WebSocket ниже.</div>
     </div>
     <div class="step">
       <div class="step-num">3</div>
