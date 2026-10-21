@@ -84,6 +84,7 @@ function readDomMedia() {
     const artistNode = zone.querySelector('.pla-artist');
     const songNode = zone.querySelector('.pla-song');
     const img = document.querySelector('.pla-control .pla-ava img');
+    const stationImg = document.querySelector('.pla-radio .pla-ava img, .pla-ava--station img');
     const rTitle = alone ? alone.textContent.trim() : (songNode ? songNode.textContent.trim() : '');
     const rArtist = artistNode ? artistNode.textContent.trim() : '';
     if (!rTitle && !rArtist) return null;
@@ -100,7 +101,8 @@ function readDomMedia() {
     const isPlaying = cast ? (cast.classList.contains('pla-cast--stop') || cast.classList.contains('pla-cast--load')) : false;
     // Иконка громкости у сайта бывает в mute при реально играющем звуке
     // (volume 0.02 + audible), поэтому приоритет радио не занижаем.
-    return { title: rTitle, artist: rArtist, album: station, artwork: img ? img.src : '', state: isPlaying ? 'playing' : 'paused', muted: false };
+    const art = (img && img.src) ? img.src : (stationImg && stationImg.src ? stationImg.src : '');
+    return { title: rTitle, artist: rArtist, album: station, artwork: art, state: isPlaying ? 'playing' : 'paused', muted: false };
   }
   const titleEl = document.querySelector('[data-testid="context-item-info-title"]');
   const artistEl = document.querySelector('[data-testid="context-item-info-artist"]');

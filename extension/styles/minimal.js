@@ -21,10 +21,13 @@ function setupMarquee(el, text, gen) {
                 el.innerHTML = '<span>' + text + '</span><span>' + text + '</span>';
                 span = el.querySelector('span');
                 tw = span.getBoundingClientRect().width;
+                var gap = cw;
+                var spans = el.querySelectorAll('span');
+                for (var k = 0; k < spans.length; k++) spans[k].style.paddingRight = gap + 'px';
                 var chars = Math.max(1, Array.from(text).length);
                 var textW = Math.max(1, tw - pr);
                 var speedPx = (textW / chars) * marqueeCps();
-                var dur = Math.max(1000, (tw / speedPx) * 1000);
+                var dur = Math.max(1000, ((textW + gap) / speedPx) * 1000);
                 el.style.setProperty('--marquee-duration', (dur / 1000) + 's');
                 for (var i = 0; i < marqueeItems.length; i++) {
                     if (marqueeItems[i].el === el) { marqueeItems[i].text = text; marqueeItems[i].dur = dur; return; }
