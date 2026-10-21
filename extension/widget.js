@@ -131,11 +131,11 @@ function setMarqueeText(el, text, gen) {
             var pr = parseFloat(getComputedStyle(span).paddingRight) || 0;
             if (tw - pr > cw + 2) {
                 el.innerHTML = '<span>' + text + '</span><span>' + text + '</span>';
+                var chars = Math.max(1, Array.from(text).length);
+                var textW = Math.max(1, tw - pr);
                 var gap = cw;
                 var spans = el.querySelectorAll('span');
                 for (var k = 0; k < spans.length; k++) spans[k].style.paddingRight = gap + 'px';
-                var chars = Math.max(1, Array.from(text).length);
-                var textW = Math.max(1, tw - pr);
                 var speedPx = (textW / chars) * marqueeCps();
                 var dur = Math.max(1000, ((textW + gap) / speedPx) * 1000);
                 el.style.setProperty('--marquee-duration', (dur / 1000) + 's');
