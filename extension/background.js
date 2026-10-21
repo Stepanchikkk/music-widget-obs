@@ -59,6 +59,54 @@ async function injectWidgetConfig() {
   }
 }
 
+let textEnabled = false;
+let textSources = [];
+let textFormat = '{artist} — {title}';
+let textScroll = false;
+let textScrollSpeed = 50;
+let textGap = 8;
+let lastTextValue = '';
+let textSourcesCache = [];
+
+function formatText(data) {
+  if (!data || data.error) return '';
+  return String(textFormat || '{artist} — {title}')
+    .replace(/\{artist\}/g, data.artist || '')
+    .replace(/\{title\}/g, data.title || '')
+    .replace(/\{album\}/g, data.album || '')
+    .trim();
+}
+
+async function updateTextSource(data) {
+  if (!textEnabled || !wsAuthenticated || !textSources.length) return;
+  const text = formatText(data);
+  const gap = Math.max(0, Math.min(50, Number(textGap) || 0));
+  const out = gap > 0 ? text + ' '.repeat(gap) : text;
+  if (out === lastTextValue) return;
+  lastTextValue = out;
+  for (const name of textSources) {
+    try { await obsRequest('SetInputSettings', { inputName: name, inputSettings: { text: out }, overlay: true }); } catch (e) {}
+  }
+}
+
+async function applyTextScroll() {
+  if (!wsAuthenticated) return;
+  for (const name of textSources) {
+    try {
+      const fl = (await obsRequest('GetSourceFilterList', { sourceName: name })).responseData;
+      const exists = ((fl && fl.filters) || []).some(f => f.filterName === 'MW Scroll');
+      if (!exists && !textScroll) continue;
+      const settings = { speed_x: Number(textScrollSpeed) || 50, speed_y: 0, loop: true };
+      if (!exists) {
+        await obsRequest('CreateSourceFilter', { sourceName: name, filterName: 'MW Scroll', filterKind: 'scroll_filter', filterSettings: settings });
+      } else {
+        await obsRequest('SetSourceFilterSettings', { sourceName: name, filterName: 'MW Scroll', filterSettings: settings });
+      }
+      await obsRequest('SetSourceFilterEnabled', { sourceName: name, filterName: 'MW Scroll', filterEnabled: textScroll });
+    } catch (e) {}
+  }
+}
+
 
 const tracks = new Map();
 const lastUpdate = new Map();
@@ -131,6 +179,8 @@ function connect() {
         connectFailures = 0;
         lastError = '';
         injectWidgetConfig();
+        applyTextScroll();
+        if (currentTrackData && !currentTrackData.error) updateTextSource(currentTrackData);
         pickAndSend(true);
       } else if (msg.op === 7) {
         const p = obsPending.get(msg.d.requestId);
@@ -188,6 +238,7 @@ function send(data) {
       }
     }));
   } catch (e) {}
+  updateTextSource(data);
 }
 
 function trackWeight(track) {
@@ -324,6 +375,33 @@ function collectDiag() {
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'getTextSources') {
+    (async () => {
+      try {
+        const list = (await obsRequest('GetInputList')).responseData;
+        const sources = ((list && list.inputs) || []).filter(i => String(i.inputKind || '').indexOf('text_') === 0).map(i => i.inputName);
+        textSourcesCache = sources;
+        sendResponse({ ok: true, sources });
+      } catch (e) {
+        sendResponse({ ok: true, sources: textSourcesCache, cached: true, error: e.message });
+      }
+    })();
+    return true;
+  }
+  if (msg.type === 'setTextConfig') {
+    textEnabled = !!msg.enabled;
+    textSources = Array.isArray(msg.sources) ? msg.sources : [];
+    textFormat = msg.format || '{artist} — {title}';
+    textScroll = !!msg.scroll;
+    textScrollSpeed = Number(msg.scrollSpeed) || 50;
+    textGap = Math.max(0, Math.min(50, Number(msg.gap) || 0));
+    lastTextValue = '';
+    chrome.storage.local.set({ textEnabled, textSources, textFormat, textScroll, textScrollSpeed, textGap });
+    applyTextScroll();
+    if (currentTrackData && !currentTrackData.error) updateTextSource(currentTrackData);
+    sendResponse({ ok: true });
+    return true;
+  }
   if (msg.type === 'mediaSessionUpdate') {
     const tabId = sender.tab?.id;
     if (!tabId) return;
@@ -441,11 +519,17 @@ function getHostname(url) {
   try { return new URL(url).hostname; } catch { return ''; }
 }
 
-chrome.storage.local.get({ wsPort: DEFAULT_PORT, widgetStyle: 'classic', wsPassword: '', usePassword: false }, (items) => {
+chrome.storage.local.get({ wsPort: DEFAULT_PORT, widgetStyle: 'classic', wsPassword: '', usePassword: false, textEnabled: false, textSources: [], textFormat: '{artist} — {title}', textScroll: false, textScrollSpeed: 50, textGap: 8 }, (items) => {
   wsPort = items.wsPort;
   widgetStyle = items.widgetStyle || 'classic';
   wsPassword = items.wsPassword || '';
   usePassword = !!items.usePassword;
+  textEnabled = !!items.textEnabled;
+  textSources = Array.isArray(items.textSources) ? items.textSources : [];
+  textFormat = items.textFormat || '{artist} — {title}';
+  textScroll = !!items.textScroll;
+  textScrollSpeed = Number(items.textScrollSpeed) || 50;
+  textGap = Math.max(0, Math.min(50, Number(items.textGap) || 0));
   settingsReady = true;
   connect();
   checkForUpdate(false);

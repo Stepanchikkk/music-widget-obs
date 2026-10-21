@@ -11,9 +11,14 @@
     color: #d0d0d8;
     font-size: 13px;
     line-height: 1.5;
-    overflow-y: auto;
     overflow-x: hidden;
   }
+  html { scrollbar-color: #4b4b57 transparent; }
+  body { scrollbar-color: #4b4b57 transparent; }
+  ::-webkit-scrollbar { width: 15px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #4b4b57; border-radius: 999px; border: 4px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background: #5f5f6d; background-clip: content-box; }
 
   .header {
     display: flex;
@@ -189,6 +194,7 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    min-height: 30px;
     padding: 6px 10px;
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
@@ -200,16 +206,24 @@
   }
   .style-dd summary::-webkit-details-marker { display: none; }
   .style-dd[open] summary { border-color: #6C5CE7; }
-  .style-dd summary::after {
+  .style-dd summary::after,
+  .text-details > summary::after {
     content: '';
-    width: 0; height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 5px solid #888;
-    transition: transform 0.2s;
+    width: 8px; height: 8px;
+    border-right: 2px solid #888;
+    border-bottom: 2px solid #888;
+    transform: rotate(-45deg);
+    transition: transform 0.2s, border-color 0.2s;
     margin-left: 8px;
+    flex: none;
   }
-  .style-dd[open] summary::after { transform: rotate(180deg); }
+  .style-dd summary:hover::after,
+  .text-details > summary:hover::after { border-color: #c9c2ff; }
+  .style-dd[open] summary::after,
+  .text-details[open] > summary::after { transform: rotate(45deg); }
+  .style-dd summary:hover { background: rgba(255,255,255,0.09); }
+  .text-details > summary:hover { background: none; }
+  .text-details > summary:hover .section-title { color: #fff; }
   .style-options {
     position: absolute;
     top: 100%;
@@ -220,7 +234,10 @@
     background: #1a1a24;
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 5px;
-    overflow: hidden;
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.14) transparent;
   }
   .style-option {
     padding: 6px 10px;
@@ -229,6 +246,9 @@
     cursor: pointer;
     transition: background 0.15s;
   }
+  .style-options { padding: 4px; }
+  .src-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 5px; cursor: pointer; font-size: 12px; color: #b9b9c6; user-select: none; }
+  .src-item:hover { background: rgba(255,255,255,0.05); }
   .style-option:hover { background: rgba(90,75,209,0.25); }
   .style-option.active { background: rgba(90,75,209,0.4); color: #fff; }
 
@@ -296,6 +316,47 @@
   }
   .footer-link a:hover { text-decoration: underline; }
   .footer-sep { color: #444; margin: 0 4px; }
+
+  /* Text in OBS */
+  .text-details > summary { list-style: none; cursor: pointer; padding: 0; margin: 0; border-radius: 6px; }
+  .text-details > summary::-webkit-details-marker { display: none; }
+  .text-details > summary .section-title { margin-bottom: 0; }
+  .text-details .field-row > label:not(.check-row) { width: 72px; min-width: 72px; }
+  .text-details > summary .track-source { margin-left: auto; }
+  .text-details .settings-grid { margin-top: 8px; }
+  .text-src-dd { flex: 1; min-width: 0; }
+  .fmt-pair { flex: 1; min-width: 0; display: flex; gap: 8px; }
+  .text-format-dd { flex: 1; min-width: 0; }
+  .text-sep-dd { flex: none; width: 66px; }
+  .style-dd.disabled { opacity: 0.4; pointer-events: none; }
+  .text-src-dd summary { padding: 6px 10px; font-size: 11px; }
+  .dd-label { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dd-value { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .style-select { padding: 6px 10px; }
+  .text-src-refresh { width: calc(100% - 12px); margin: 4px 6px 2px; }
+  .text-src-empty { color: #c66; }
+  .check-row { display: flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; font-size: 12px; color: #b9b9c6; }
+  .check-row span { cursor: pointer; }
+  input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 4px; flex: none; position: relative; margin: 0; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04); cursor: pointer; transition: background .15s, border-color .15s, box-shadow .15s; }
+  input[type="checkbox"]:hover { border-color: #6C5CE7; }
+  input[type="checkbox"]:checked { background: #6C5CE7; border-color: #6C5CE7; box-shadow: 0 0 0 2px rgba(108,92,231,0.18); }
+  input[type="checkbox"]:not(.switch):checked::after { content: ''; position: absolute; left: 3.5px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 1.8px 1.8px 0; transform: rotate(45deg); }
+  input[type="checkbox"].switch { width: 30px; height: 17px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.15); }
+  input[type="checkbox"].switch::after { content: ''; position: absolute; top: 1px; left: 1px; width: 13px; height: 13px; border-radius: 50%; background: #aaa; transform: none; border: none; transition: transform .2s, background .2s; }
+  input[type="checkbox"].switch:checked { background: #5a4bd1; border-color: #5a4bd1; box-shadow: none; }
+  input[type="checkbox"].switch:checked::after { transform: translateX(13px); background: #fff; border: none; }
+  .sep-select { flex: none; width: 66px; }
+  .style-input { width: 100%; padding: 6px 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; font-size: 12px; color: #d0d0d8; font-family: inherit; outline: none; }
+  .style-input:focus { border-color: #6C5CE7; }
+  .style-input::placeholder { color: #555; }
+  .preview { padding: 7px 10px; border-radius: 6px; background: rgba(108,92,231,0.10); border: 1px solid rgba(108,92,231,0.28); color: #d8d4ff; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini { width: 46px; padding: 4px 6px; text-align: center; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: #d0d0d8; font-size: 11px; outline: none; }
+  .mini:focus { border-color: #6C5CE7; }
+  .mini-unit { font-size: 10px; color: #666; }
+  .hint { font-size: 11px; color: #777; min-height: 14px; }
+  .field-hint { font-size: 12px; color: #888; }
+  .steps .section-title { margin-bottom: 6px; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -329,7 +390,7 @@
       <span class="track-source" id="trackSource"></span>
     </div>
     <div class="preview-wrap" id="previewWidget">
-      <iframe id="previewFrame" style="width:100%; height:100%; border:none; display:block;"></iframe>
+      <iframe id="previewFrame"></iframe>
     </div>
   </div>
 
@@ -342,10 +403,10 @@
       </div>
       <div class="field-row">
         <label>Пароль</label>
-        <input type="checkbox" id="usePassword" style="width:auto;flex:none;margin:0;">
-        <span style="font-size:12px;color:#888;">использовать</span>
+        <input type="checkbox" id="usePassword" class="switch">
+        <span class="field-hint">использовать</span>
       </div>
-      <div class="field-row" id="passwordRow" style="display:none;">
+      <div class="field-row" id="passwordRow" hidden>
         <label></label>
         <input type="password" id="passwordInput" placeholder="Пароль OBS WebSocket">
       </div>
@@ -356,16 +417,76 @@
   </div>
 
   <div class="section">
+    <details class="text-details">
+      <summary class="section-title-row">
+        <span class="section-title">Вывод в текстовый источник</span>
+        <span class="track-source" id="textSummaryMeta">выкл</span>
+      </summary>
+      <div class="settings-grid">
+        <div class="field-row">
+          <label>Вывод</label>
+          <label class="check-row"><input type="checkbox" id="textEnabled" class="switch"> <span>в Text-источник</span></label>
+        </div>
+        <div class="field-row">
+          <label>Источники</label>
+          <details class="style-dd text-src-dd" id="textSrcDD">
+            <summary><span class="dd-label">Выбрано: <span id="textSrcCount">0</span></span></summary>
+            <div class="style-options" id="textSrcPop"></div>
+          </details>
+        </div>
+        <div class="field-row">
+          <label>Формат</label>
+          <div class="fmt-pair">
+            <details class="style-dd text-format-dd" id="textFormatDD">
+              <summary><span class="dd-value" id="textFormatSummary">Artist — Title</span></summary>
+              <div class="style-options" id="textFormatOptions"></div>
+            </details>
+            <details class="style-dd text-sep-dd" id="textSepDD">
+              <summary><span class="dd-value" id="textSepSummary">—</span></summary>
+              <div class="style-options" id="textSepOptions"></div>
+            </details>
+          </div>
+        </div>
+        <div class="field-row" id="textCustomFormatRow" hidden>
+          <label></label>
+          <input class="style-input" id="textCustomFormat" placeholder="{artist} — {title}">
+        </div>
+        <div class="field-row" id="textCustomSepRow" hidden>
+          <label></label>
+          <input class="style-input" id="textCustomSep" placeholder="свой разделитель">
+        </div>
+        <div class="preview" id="textPreview">Artist — Title</div>
+        <div class="field-row">
+          <span class="mini-label">Прокрутка</span>
+          <input type="checkbox" id="textScroll" class="switch">
+          <span class="mini-label">Скорость</span>
+          <input class="mini" id="textScrollSpeed" value="50">
+          <span class="mini-unit">px/s</span>
+        </div>
+        <div class="field-row">
+          <label>Отступ</label>
+          <input class="mini" id="textGap" value="8">
+          <span class="mini-unit">симв.</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="textSave">Применить</button>
+        </div>
+        <div id="textHint" class="hint"></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="section">
     <div class="section-title" id="styleSectionTitle">Стиль виджета</div>
     <details class="style-dd" id="styleDropdown">
       <summary id="styleSummary">Классический</summary>
       <div class="style-options" id="styleOptions"></div>
     </details>
   </div>
-<canvas id="previewColorAnalyzer" width="10" height="10" style="display:none"></canvas>
+<canvas id="previewColorAnalyzer" width="10" height="10" hidden></canvas>
 
   <div class="steps">
-    <div class="section-title" style="margin-bottom:6px;">Настройка OBS</div>
+    <div class="section-title">Настройка OBS</div>
     <div class="step">
       <div class="step-num">1</div>
       <div class="step-text"><strong>Сервис</strong> &rarr; <strong>Настройки сервера WebSocket</strong></div>

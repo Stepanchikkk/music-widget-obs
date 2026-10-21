@@ -87,6 +87,52 @@ const portInput = document.getElementById('portInput');
 const usePasswordInput = document.getElementById('usePassword');
 const passwordInput = document.getElementById('passwordInput');
 const passwordRow = document.getElementById('passwordRow');
+const textEnabledInput = document.getElementById('textEnabled');
+const textCustomFormatRow = document.getElementById('textCustomFormatRow');
+const textCustomSepRow = document.getElementById('textCustomSepRow');
+const textCustomFormat = document.getElementById('textCustomFormat');
+const textCustomSep = document.getElementById('textCustomSep');
+const textPreview = document.getElementById('textPreview');
+const textScrollInput = document.getElementById('textScroll');
+const textScrollSpeedInput = document.getElementById('textScrollSpeed');
+const textGapInput = document.getElementById('textGap');
+const textSaveBtn = document.getElementById('textSave');
+const textHint = document.getElementById('textHint');
+const textSummaryMeta = document.getElementById('textSummaryMeta');
+const textSrcCount = document.getElementById('textSrcCount');
+const textSrcPop = document.getElementById('textSrcPop');
+const textFormatDD = document.getElementById('textFormatDD');
+const textFormatSummary = document.getElementById('textFormatSummary');
+const textFormatOptions = document.getElementById('textFormatOptions');
+const textSepDD = document.getElementById('textSepDD');
+const textSepSummary = document.getElementById('textSepSummary');
+const textSepOptions = document.getElementById('textSepOptions');
+const TEXT_FORMATS = [
+  { value: 'a1', label: 'Artist — Title' },
+  { value: 'a2', label: 'Title — Artist' },
+  { value: 'a3', label: 'Artist — Title (album)' },
+  { value: 'a4', label: 'Title (artist)' },
+  { value: 'custom', label: 'Другой…' }
+];
+const TEXT_SEPS = [
+  { value: '—', label: '—' },
+  { value: '·', label: '·' },
+  { value: '|', label: '|' },
+  { value: '/', label: '/' },
+  { value: '•', label: '•' },
+  { value: 'custom', label: 'Свой…' }
+];
+let textFormatValue = 'a1';
+let textSepValue = '—';
+let savedTextSources = [];
+let textSourcesCache = [];
+let textLastConnected = false;
+const TEXT_PRESETS = {
+  a1: '{artist} — {title}',
+  a2: '{title} — {artist}',
+  a3: '{artist} — {title} ({album})',
+  a4: '{title} ({artist})'
+};
 const langSwitch = document.getElementById('langSwitch');
 const styleDropdown = document.getElementById('styleDropdown');
 const styleSummary = document.getElementById('styleSummary');
@@ -199,9 +245,11 @@ function updateStatus(status) {
     currentStyle = status.style;
     updateStyleUI();
   }
+  if (status.connected && !textLastConnected) loadTextSources();
+  textLastConnected = !!status.connected;
   if (status.connected) {
     statusDot.className = 'dot connected';
-    trackSection.style.display = 'block';
+    trackSection.hidden = false;
     if (status.track) {
       statusText.innerHTML = T('statusConnected');
       trackSource.textContent = status.source || '';
@@ -215,7 +263,7 @@ function updateStatus(status) {
   } else {
     statusDot.className = 'dot disconnected';
     statusText.innerHTML = T('statusDisconnected');
-    trackSection.style.display = 'block';
+    trackSection.hidden = false;
     trackSource.textContent = '';
     sendToPreview(null, false);
 
@@ -238,6 +286,7 @@ function updateStatus(status) {
       statusHint.textContent = T('waitingTrack', { tabs: status.tabs });
     }
   }
+  renderTextPreview();
 }
 
 async function checkStatus() {
@@ -253,13 +302,160 @@ async function checkStatus() {
   }
 }
 
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 function loadSettings() {
-  chrome.storage.local.get({ wsPort: '4455', wsPassword: '', usePassword: false }, (items) => {
+  chrome.storage.local.get({ wsPort: '4455', wsPassword: '', usePassword: false, textEnabled: false, textSources: [], textFormat: '{artist} — {title}', textPreset: '', textSep: '—', textCustomFormat: '{artist} — {title}', textCustomSep: ' — ', textScroll: false, textScrollSpeed: 50 }, (items) => {
     portInput.value = items.wsPort;
     usePasswordInput.checked = !!items.usePassword;
     passwordInput.value = items.wsPassword || '';
-    passwordRow.style.display = items.usePassword ? 'flex' : 'none';
+    passwordRow.hidden = !items.usePassword;
+    textEnabledInput.checked = !!items.textEnabled;
+    const preset = items.textPreset || inferTextPreset(items.textFormat || '{artist} — {title}');
+    textFormatValue = preset;
+    textSepValue = items.textSep || '—';
+    renderTextDropdowns();
+    if (preset === 'custom' && !items.textPreset) textCustomFormat.value = items.textFormat || '{artist} — {title}';
+    else textCustomFormat.value = items.textCustomFormat || '{artist} — {title}';
+    textCustomSep.value = items.textCustomSep || ' — ';
+    textScrollInput.checked = !!items.textScroll;
+    textScrollSpeedInput.value = items.textScrollSpeed || 50;
+  textGapInput.value = items.textGap ?? 8;
+    savedTextSources = Array.isArray(items.textSources) ? items.textSources : [];
+    updateTextFormatUI();
+    updateTextMeta();
+    loadTextSources();
   });
+}
+
+function loadTextSources() {
+  if (!textSrcPop) return;
+  textSrcPop.innerHTML = '<div class="src-item">Загрузка...</div>';
+  chrome.runtime.sendMessage({ type: 'getTextSources' }, (resp) => {
+    if (!resp || !resp.ok) {
+      textSrcPop.innerHTML = '<div class="src-item">Нет соединения с OBS</div><button class="btn btn-secondary text-src-refresh" id="textSrcRefresh">Обновить</button>';
+      bindTextSrcRefresh();
+      updateTextSrcCount();
+      updateTextMeta();
+      return;
+    }
+    textSourcesCache = resp.sources || [];
+    if (!textSourcesCache.length) {
+      textSrcPop.innerHTML = '<div class="src-item">Text-источников нет. Добавьте Text (GDI+) в OBS.</div><button class="btn btn-secondary text-src-refresh" id="textSrcRefresh">Обновить</button>';
+      bindTextSrcRefresh();
+      updateTextSrcCount();
+      updateTextMeta();
+      return;
+    }
+    textSrcPop.innerHTML = textSourcesCache.map((n) => {
+      const checked = savedTextSources.indexOf(n) !== -1 ? ' checked' : '';
+      return '<label class="src-item"><input type="checkbox" data-source="' + escHtml(n) + '"' + checked + '> <span>' + escHtml(n) + '</span></label>';
+    }).join('') + '<button class="btn btn-secondary text-src-refresh" id="textSrcRefresh">Обновить</button>';
+    textSrcPop.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+      cb.addEventListener('change', updateTextSrcCount);
+    });
+    bindTextSrcRefresh();
+    updateTextSrcCount();
+    updateTextMeta();
+    if (resp.cached) textHint.textContent = 'OBS не подключён — список из кэша';
+  });
+}
+
+function bindTextSrcRefresh() {
+  const b = document.getElementById('textSrcRefresh');
+  if (b) b.addEventListener('click', (e) => { e.stopPropagation(); loadTextSources(); });
+}
+
+function updateTextSrcCount() {
+  textSrcCount.textContent = textSrcPop.querySelectorAll('input[type="checkbox"]:checked').length;
+}
+
+function updateTextMeta() {
+  const n = savedTextSources.filter((s) => textSourcesCache.indexOf(s) !== -1).length;
+  textSummaryMeta.textContent = textEnabledInput.checked ? (n ? n + ' ист.' : 'нет источников') : 'выкл';
+}
+
+function inferTextPreset(fmt) {
+  for (const k in TEXT_PRESETS) { if (TEXT_PRESETS[k] === fmt) return k; }
+  return 'custom';
+}
+
+function buildTextFormat() {
+  const preset = textFormatValue;
+  if (preset === 'custom') {
+    return (textCustomFormat.value || '').trim() || '{artist} — {title}';
+  }
+  const template = TEXT_PRESETS[preset] || TEXT_PRESETS.a1;
+  const sep = textSepValue;
+  const sepText = sep === 'custom' ? (textCustomSep.value || ' — ') : (' ' + sep + ' ');
+  return template.split(' — ').join(sepText);
+}
+
+function renderTextPreview() {
+  const fmt = buildTextFormat();
+  const t = lastTrack;
+  let text = fmt
+    .split('{artist}').join(t ? (t.artist || '') : 'Artist')
+    .split('{title}').join(t ? (t.title || '') : 'Title')
+    .split('{album}').join(t ? (t.album || '') : 'Album');
+  text = text.trim();
+  textPreview.textContent = text || '—';
+}
+
+function renderTextDropdowns() {
+  textFormatOptions.innerHTML = TEXT_FORMATS.map((f) =>
+    '<div class="style-option' + (f.value === textFormatValue ? ' active' : '') + '" data-value="' + f.value + '">' + f.label + '</div>'
+  ).join('');
+  textSepOptions.innerHTML = TEXT_SEPS.map((s) =>
+    '<div class="style-option' + (s.value === textSepValue ? ' active' : '') + '" data-value="' + s.value + '">' + s.label + '</div>'
+  ).join('');
+  const fmt = TEXT_FORMATS.find((f) => f.value === textFormatValue) || TEXT_FORMATS[0];
+  const sep = TEXT_SEPS.find((s) => s.value === textSepValue) || TEXT_SEPS[0];
+  textFormatSummary.textContent = fmt.label;
+  textSepSummary.textContent = sep.label;
+}
+
+function updateTextFormatUI() {
+  const customFmt = textFormatValue === 'custom';
+  textCustomFormatRow.hidden = !customFmt;
+  textSepDD.classList.toggle('disabled', customFmt);
+  const customSep = !customFmt && textSepValue === 'custom';
+  textCustomSepRow.hidden = !customSep;
+  renderTextPreview();
+}
+
+function saveTextConfig() {
+  const sources = Array.from(textSrcPop.querySelectorAll('input[type="checkbox"][data-source]'))
+    .filter((cb) => cb.checked).map((cb) => cb.getAttribute('data-source'));
+  savedTextSources = sources;
+  const format = buildTextFormat();
+  const config = {
+    enabled: textEnabledInput.checked,
+    sources,
+    format,
+    scroll: textScrollInput.checked,
+    scrollSpeed: parseInt(textScrollSpeedInput.value, 10) || 50,
+    gap: Math.max(0, Math.min(50, parseInt(textGapInput.value, 10) || 0))
+  };
+  chrome.storage.local.set({
+    textEnabled: config.enabled,
+    textSources: sources,
+    textFormat: format,
+    textPreset: textFormatValue,
+    textSep: textSepValue,
+    textCustomFormat: textCustomFormat.value,
+    textCustomSep: textCustomSep.value,
+    textScroll: config.scroll,
+    textScrollSpeed: config.scrollSpeed,
+    textGap: config.gap,
+    textGap: config.gap
+  });
+  chrome.runtime.sendMessage({ type: 'setTextConfig', ...config }, (resp) => {
+    textHint.textContent = resp && resp.ok ? 'Сохранено' : 'Ошибка сохранения';
+  });
+  updateTextMeta();
 }
 
 function saveSettings() {
@@ -281,11 +477,31 @@ portInput.addEventListener('keydown', (e) => {
 });
 
 usePasswordInput.addEventListener('change', () => {
-  passwordRow.style.display = usePasswordInput.checked ? 'flex' : 'none';
+  passwordRow.hidden = !usePasswordInput.checked;
 });
 passwordInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') saveSettings();
 });
+textEnabledInput.addEventListener('change', updateTextMeta);
+textCustomFormat.addEventListener('input', renderTextPreview);
+textCustomSep.addEventListener('input', renderTextPreview);
+textFormatOptions.addEventListener('click', (e) => {
+  const opt = e.target.closest('.style-option');
+  if (!opt) return;
+  textFormatValue = opt.getAttribute('data-value');
+  textFormatDD.open = false;
+  renderTextDropdowns();
+  updateTextFormatUI();
+});
+textSepOptions.addEventListener('click', (e) => {
+  const opt = e.target.closest('.style-option');
+  if (!opt) return;
+  textSepValue = opt.getAttribute('data-value');
+  textSepDD.open = false;
+  renderTextDropdowns();
+  updateTextFormatUI();
+});
+textSaveBtn.addEventListener('click', saveTextConfig);
 
 function buildStyleOptions() {
   styleOptions.innerHTML = STYLES.map(s =>
