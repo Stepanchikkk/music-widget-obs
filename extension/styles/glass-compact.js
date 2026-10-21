@@ -51,8 +51,12 @@ S['glass-compact'] = {
             E.artwork.classList.remove('visible'); E.artworkBg.classList.remove('hidden');
             widget.style.removeProperty('--glass-artwork');
         }
-        E.stateBtn.innerHTML = data.state === 'paused' ? SVG_PLAY : SVG_PAUSE;
-        E.progressFill.className = 'progress-fill' + (data.state === 'paused' ? ' paused' : '');
+        if (E.stateBtn.getAttribute('data-state') !== data.state) {
+            E.stateBtn.setAttribute('data-state', data.state);
+            E.stateBtn.innerHTML = data.state === 'paused' ? SVG_PLAY : SVG_PAUSE;
+        }
+        var pc = 'progress-fill' + (data.state === 'paused' ? ' paused' : '');
+        if (E.progressFill.className !== pc) E.progressFill.className = pc;
         if (syncId) clearInterval(syncId);
         if (data.duration > 0) {
             var adj = data.state === 'paused' ? data.currentTime : data.currentTime + (Date.now() - (data.ts||Date.now())) / 1000;
