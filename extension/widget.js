@@ -287,7 +287,7 @@ function applyStyle(name) {
     removePlaceholder();
     if (currentStyle && __STYLES[currentStyle]) __STYLES[currentStyle].destroy();
     currentStyle = name || '';
-    // style is not persisted: popup sends it via data._style
+    if (currentStyle && !lockedStyle) localStorage.setItem('widgetStyle', currentStyle);
     if (__STYLES[currentStyle]) __STYLES[currentStyle].init();
     orient();
 }
@@ -382,7 +382,7 @@ try {
     }
 } catch(e) {}
 
-var SAVED_STYLE = null;
+var SAVED_STYLE = localStorage.getItem('widgetStyle') || null;
 
 if (CUSTOM_STYLE) { lockedStyle = CUSTOM_STYLE; applyStyle(CUSTOM_STYLE); showStatus(TXT[LANG].noMusic);
 } else if (INIT_STYLE) { lockedStyle = INIT_STYLE; applyStyle(INIT_STYLE); showStatus(TXT[LANG].noMusic);
