@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Music Widget OBS</title>
+<style>
+  :root { color-scheme: light; }
+  body { max-width: 720px; margin: 0 auto; padding: 40px 20px 64px; font: 16px/1.65 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #1f2430; background: #fff; }
+  h1 { font-size: 28px; line-height: 1.25; margin: 0 0 24px; }
+  h2 { font-size: 18px; margin: 32px 0 8px; }
+  p, li { color: #3a4150; }
+  code { font-size: 14px; background: #f2f4f8; padding: 1px 5px; border-radius: 4px; }
+  a { color: #5b5bd6; }
+  ul { padding-left: 22px; }
+</style>
+</head>
+<body>
+<h1>Privacy Policy — Music Widget OBS</h1>
+<h2>What the extension reads</h2>
+<ul>
+<li>Currently playing media metadata from the active tab: title, artist, album, artwork URL, playback state, current time and duration.</li>
+<li>The tab hostname (to show which site is playing).</li>
+<li>The user's settings: OBS WebSocket port and password, widget style, text output settings.</li>
+</ul>
+<h2>How the data is used</h2>
+<ul>
+<li>Sent locally to OBS through obs-websocket (default <code>ws://127.0.0.1:4455</code>).</li>
+<li>The text output is written to the selected OBS Text sources through the same local WebSocket.</li>
+<li>Nothing is sent to any remote server. No analytics, no tracking, no advertising.</li>
+</ul>
+<h2>Storage</h2>
+<ul>
+<li>Settings are stored in <code>chrome.storage.local</code> on the user's machine.</li>
+<li>The OBS WebSocket password is stored locally and injected into the OBS source's Custom CSS as base64; it never leaves the machine.</li>
+</ul>
+<h2>Permissions</h2>
+<ul>
+<li><code>host_permissions: &lt;all_urls&gt;</code> and the content script — to read <code>mediaSession</code> and the DOM on any site that plays media.</li>
+<li><code>tabs</code> — to know which tab is playing and to clear the track when the tab closes.</li>
+<li><code>storage</code> — to save settings.</li>
+<li><code>alarms</code> — to keep the service worker alive for the WebSocket heartbeat.</li>
+<li><code>scripting</code> — to inject the content script on demand.</li>
+</ul>
+<h2>Third parties</h2>
+<ul>
+<li>No third-party services. The widget is a local HTML file or a static page (GitHub Pages); it connects only to the local OBS WebSocket.</li>
+</ul>
+<h2>Contact</h2>
+<ul>
+<li><a href="https://github.com/Stepanchikkk/music-widget-obs">https://github.com/Stepanchikkk/music-widget-obs</a></li>
+</ul>
+</body>
+</html>
