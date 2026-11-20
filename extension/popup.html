@@ -73,6 +73,8 @@
 
   .section { padding: 12px 16px; border-bottom: 1px solid var(--mw-border); }
   .section:last-of-type { border-bottom: none; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .section-head .section-title { margin-bottom: 0; }
   .section-title {
     font-size: 10px;
     text-transform: uppercase;
@@ -129,6 +131,8 @@
 
   .btn-row { display: flex; justify-content: center; padding-top: 8px; }
   .btn { width: auto; height: 34px; padding: 0 12px; border-radius: var(--mw-radius); border: 1px solid var(--mw-border); background: var(--mw-surface); color: var(--mw-text); font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-quiet { background: transparent; border-color: transparent; color: var(--mw-text-2); padding: 0 6px; height: 26px; font-weight: 500; }
+  .btn-quiet:hover { color: #fff; background: var(--mw-surface); }
   .btn-primary { background: var(--mw-primary); border-color: var(--mw-primary); color: #fff; }
   .btn-primary:hover { background: var(--mw-primary-hover); border-color: var(--mw-primary-hover); }
   .btn-primary:hover { background: #6c5ce7; }
@@ -168,6 +172,7 @@
   .style-options { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30; max-height: 220px; overflow-y: auto; background: #1b1b23; border: 1px solid var(--mw-border); border-radius: var(--mw-radius); padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.45); }
   .style-option { padding: 7px 9px; border-radius: 6px; font-size: 12px; color: var(--mw-text); cursor: pointer; }
   .style-options { padding: 4px; }
+  .src-empty { color: var(--mw-text-3); cursor: default; }
   .src-item { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--mw-text); user-select: none; }
   .src-item:hover { background: var(--mw-surface); }
   .style-option:hover { background: rgba(90,75,209,0.25); }
@@ -224,7 +229,8 @@
   .widget-url { flex: 1; min-width: 0; height: 30px; padding: 0 8px; border: none; background: transparent; outline: none; font-family: ui-monospace, Consolas, monospace; font-size: 11px; color: #c9c2ff; }
   .icon-btn { flex: none; width: 28px; height: 28px; margin-right: 1px; border: none; border-radius: var(--mw-radius); background: transparent; color: #8d8d9c; cursor: pointer; font-size: 15px; line-height: 1; display: grid; place-items: center; }
   .icon-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
-  .fallback-link { display: block; margin: 6px 0 0; font-size: 10px; color: var(--mw-text-3); text-decoration: none; cursor: default; }
+  .fallback-hint { font-size: 10px; color: var(--mw-text-3); }
+  .fallback-link { font-size: 10px; color: var(--mw-text-2); text-decoration: underline; cursor: pointer; }
 
   .step .hint code {
     font-size: 10px;
@@ -233,6 +239,17 @@
 
   .status-text { font-size: 12px; }
 
+  .wizard { position: fixed; inset: 0; z-index: 100; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,0.55); pointer-events: none; }
+  .wizard[hidden] { display: none; }
+  .wizard.wizard-top { align-items: flex-start; }
+  .wizard-panel { position: relative; z-index: 102; pointer-events: auto; width: 100%; max-width: 330px; max-height: 46vh; overflow-y: auto; background: #1b1b23; border: 1px solid var(--mw-border); border-radius: var(--mw-radius-lg); padding: 12px 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.45); }
+  .wizard-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .wizard-title { font-size: 13px; font-weight: 600; color: #fff; }
+  .wizard-body { font-size: 12px; color: var(--mw-text); line-height: 1.5; margin-bottom: 12px; }
+  .wizard-body code { font-family: var(--mw-mono); font-size: 11px; color: #c9c2ff; }
+  .wizard-actions { display: flex; justify-content: flex-end; }
+  .wizard-error { color: #f87171; }
+  .wizard-target { scroll-margin-top: 8px; scroll-margin-bottom: 18vh; position: relative; z-index: 101; outline: 2px solid var(--mw-primary); outline-offset: 3px; border-radius: 6px; }
   .footer-link {
     padding: 10px 16px 14px;
     text-align: center;
@@ -302,12 +319,15 @@
 
 
   <div class="section">
-    <div class="section-title">Подключение к OBS</div>
+    <div class="section-head"><span class="section-title">Подключение к OBS</span><button class="btn btn-primary" id="startWizard" type="button">Мастер настройки</button></div>
     <div class="status-row">
       <span class="dot" id="statusDot"></span>
       <span class="status-text" id="statusText">Проверка...</span>
     </div>
+
+
     <div class="status-hint" id="statusHint"></div>
+
   </div>
 
   <div class="section" id="trackSection">
@@ -321,7 +341,7 @@
   </div>
 
   <div class="section">
-    <div class="section-title">Параметры WebSocket</div>
+    <div class="section-title" id="wsSection">Параметры WebSocket</div>
     <div class="settings-grid">
       <div class="field-row">
         <label>Порт</label>
@@ -405,7 +425,7 @@
   </div>
 <canvas id="previewColorAnalyzer" width="10" height="10" hidden></canvas>
 
-  <div class="steps">
+  <div class="steps" id="obsSteps">
     <div class="section-title">Настройка OBS</div>
     <div class="step">
       <div class="step-num">1</div>
@@ -423,9 +443,21 @@
           <input class="widget-url" id="widgetUrlCode" readonly>
           <button class="icon-btn" id="copyWidgetUrl" type="button" aria-label="Скопировать" title="Скопировать">&#10697;</button>
         </div>
-        <a class="fallback-link" id="downloadWidget" href="https://raw.githubusercontent.com/Stepanchikkk/music-widget-obs/master/widget.html" download>Не загружается? Скачать widget.html</a>
+        <span class="fallback-hint">Не загружается? </span><a class="fallback-link" id="downloadWidget" href="https://raw.githubusercontent.com/Stepanchikkk/music-widget-obs/master/widget.html" download>Скачайте widget.html</a><span class="fallback-hint"> и укажите его в OBS как «Локальный файл»</span>
       </div>
     </div>
+  </div>
+
+  <div class="wizard" id="wizard" hidden>
+    <div class="wizard-panel">
+      <div class="wizard-head">
+        <span class="wizard-title" id="wizardTitle">Шаг 1</span>
+        <button class="icon-btn" id="wizardClose" type="button" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="wizard-body" id="wizardBody"></div>
+      <div class="wizard-actions"><button class="btn btn-primary" id="wizardAction" type="button">Далее</button></div>
+    </div>
+    <a class="fallback-link" id="fullGuide" href="https://github.com/Stepanchikkk/music-widget-obs#readme" target="_blank">Полная инструкция</a>
   </div>
 
   <div class="footer-link">

@@ -9,7 +9,7 @@ const L10N = {
     footer: '\u0420\u0435\u043f\u043e\u0437\u0438\u0442\u043e\u0440\u0438\u0439 \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u043d\u0430 GitHub',
     copyWidget: 'Скопировать',
     copied: 'Скопировано',
-    downloadWidget: 'Не загружается? Скачайте widget.html и укажите его в OBS как «Локальный файл»',
+    downloadWidget: 'Скачайте widget.html',
     sectionTitle1: '\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u043a OBS',
     sectionTitle2: '\u0421\u0435\u0439\u0447\u0430\u0441 \u0438\u0433\u0440\u0430\u0435\u0442',
     sectionTitle3: '\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b WebSocket',
@@ -47,7 +47,7 @@ const L10N = {
     footer: 'Project repository on GitHub',
     copyWidget: 'Copy',
     copied: 'Copied',
-    downloadWidget: 'Not loading? Download widget.html and pick it in OBS as Local File',
+    downloadWidget: 'Скачайте widget.html',
     sectionTitle1: 'OBS Connection',
     sectionTitle2: 'Now Playing',
     sectionTitle3: 'WebSocket Settings',
@@ -166,6 +166,10 @@ function T(key, vars) {
 }
 
 
+let lastTrack = null;
+let lastConnected = false;
+let currentStyle = 'classic';
+
 function sendToPreview(track, connected) {
   lastTrack = track;
   lastConnected = !!connected;
@@ -245,6 +249,19 @@ langSwitch.addEventListener('click', () => {
 });
 
 function updateStatus(status) {
+  const wizardBtn = document.getElementById('startWizard');
+  if (wizardBtn) {
+    const ok = !!(status && status.connected);
+    wizardBtn.classList.toggle('btn-primary', !ok);
+    wizardBtn.classList.toggle('btn-quiet', ok);
+    wizardBtn.textContent = 'Мастер настройки';
+    const head = document.querySelector('.section-head');
+    const host = ok && head ? head : document.querySelector('#statusHint');
+    if (host && wizardBtn.parentElement !== host) {
+      if (ok && head) head.appendChild(wizardBtn);
+      else if (host) host.after(wizardBtn);
+    }
+  }
   if (status.style && status.style !== currentStyle) {
     currentStyle = status.style;
     updateStyleUI();
@@ -338,7 +355,7 @@ function loadSettings() {
 
 function loadTextSources() {
   if (!textSrcPop) return;
-  textSrcPop.innerHTML = '<div class="src-item">Загрузка...</div>';
+  textSrcPop.innerHTML = '<div class="src-item src-empty">Нет источников OBS</div>';
   chrome.runtime.sendMessage({ type: 'getTextSources' }, (resp) => {
     if (!resp || !resp.ok) {
       textSrcPop.innerHTML = '<div class="src-item">Нет соединения с OBS</div><button class="btn btn-secondary text-src-refresh" id="textSrcRefresh">Обновить</button>';
@@ -360,7 +377,7 @@ function loadTextSources() {
       return '<label class="src-item"><input type="checkbox" data-source="' + escHtml(n) + '"' + checked + '> <span>' + escHtml(n) + '</span></label>';
     }).join('') + '<button class="btn btn-secondary text-src-refresh" id="textSrcRefresh">Обновить</button>';
     textSrcPop.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-      cb.addEventListener('change', updateTextSrcCount);
+      cb.addEventListener('change', () => { updateTextSrcCount(); saveTextConfig(); });
     });
     bindTextSrcRefresh();
     updateTextSrcCount();
@@ -471,7 +488,7 @@ function saveTextConfig() {
     textGap: config.gap
   });
   chrome.runtime.sendMessage({ type: 'setTextConfig', ...config }, (resp) => {
-    textHint.textContent = resp && resp.ok ? 'Сохранено' : 'Ошибка сохранения';
+    if (textHint) textHint.textContent = resp && resp.ok ? 'Сохранено' : 'Ошибка сохранения';
   });
   updateTextMeta();
 }
@@ -577,4 +594,115 @@ styleOptions.addEventListener('click', (e) => {
   updateStyleUI();
   styleDropdown.open = false;
   applyPreviewStyle(currentStyle);
+});
+
+
+/* setup wizard */
+const wizard = document.getElementById('wizard');
+const wizardTitle = document.getElementById('wizardTitle');
+const wizardBody = document.getElementById('wizardBody');
+const wizardAction = document.getElementById('wizardAction');
+const wizardClose = document.getElementById('wizardClose');
+let wizardStep = 0;
+const WURL = 'https://stepanchikkk.github.io/music-widget-obs/widget.html';
+
+function clearWizardHighlight() {
+  document.querySelectorAll('.wizard-target').forEach((el) => el.classList.remove('wizard-target'));
+}
+function highlightTarget(sel) {
+  clearWizardHighlight();
+  const node = document.querySelector(sel);
+  const el = node ? (node.closest('.section') || node) : null;
+  if (el) { el.classList.add('wizard-target'); el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+}
+function renderWizard() {
+  if (!wizard) return;
+  wizardAction.hidden = false;
+  wizard.classList.toggle('wizard-top', wizardStep === 2 || wizardStep === 3);
+  if (wizardStep === 0) {
+    wizardTitle.textContent = 'Шаг 1 из 5 · WebSocket';
+    wizardBody.innerHTML = 'В OBS: <b>Сервис → Настройки сервера WebSocket</b> → включить, порт <code>4455</code>.<br><br>Если включён пароль — либо <b>отключите</b> его в OBS, либо включите тумблер <b>«Пароль»</b> ниже и вставьте пароль в поле. Потом «Проверить».';
+    wizardAction.textContent = 'Проверить';
+    highlightTarget('#wsSection');
+  } else if (wizardStep === 1) {
+    wizardTitle.textContent = 'Шаг 2 из 5 · Что выводим';
+    wizardBody.innerHTML = 'Выберите вариант:<br><br><button class="btn" data-wizard="widget">Виджет</button> <button class="btn" data-wizard="text">Текст</button>';
+    wizardAction.hidden = true;
+    clearWizardHighlight();
+  } else if (wizardStep === 2) {
+    wizardTitle.textContent = 'Шаг 3 из 5 · Виджет';
+    wizardBody.innerHTML = 'Скопируйте ссылку ниже — она понадобится в следующем шаге.';
+    wizardAction.textContent = 'Далее';
+    highlightTarget('.widget-link');
+  } else if (wizardStep === 3) {
+    wizardTitle.textContent = 'Шаг 4 из 5 · Источник';
+    wizardBody.innerHTML = 'В OBS: <b>Источники → + → Браузер</b>. Задайте размер, например <b>800×200</b> (горизонтально) или любой другой, и вставьте ссылку в поле URL.';
+    wizardAction.textContent = 'Далее';
+    highlightTarget('#obsSteps .step:last-child');
+  } else if (wizardStep === 4) {
+    wizardTitle.textContent = 'Шаг 5 из 5 · Стиль';
+    wizardBody.innerHTML = 'Выберите стиль виджета в попапе.';
+    wizardAction.textContent = 'Готово';
+    highlightTarget('#styleDropdown');
+  } else if (wizardStep === 10) {
+    wizardTitle.textContent = 'Шаг 3 из 4 · Текст';
+    wizardBody.innerHTML = 'Включите <b>«Вывод в текстовый источник»</b> и выберите Text-источник.';
+    wizardAction.hidden = true;
+    highlightTarget('#textEnabled');
+  } else if (wizardStep === 11) {
+    wizardTitle.textContent = 'Шаг 4 из 4 · Источник';
+    wizardBody.innerHTML = 'В OBS создайте <b>Text (GDI+)</b> и выберите его в списке источников ниже.';
+    wizardAction.hidden = true;
+    highlightTarget('#textSrcDD');
+  }
+}
+function openWizard() { if (!wizard) return; wizard.hidden = false; wizardStep = 0; renderWizard(); }
+function closeWizard() { if (wizard) wizard.hidden = true; clearWizardHighlight(); }
+const startWizardBtn = document.getElementById('startWizard');
+if (startWizardBtn) startWizardBtn.addEventListener('click', openWizard);
+if (wizardClose) wizardClose.addEventListener('click', closeWizard);
+if (wizard) {
+  wizard.addEventListener('click', (e) => {
+    const choice = e.target.closest('[data-wizard]');
+    if (choice) { wizardStep = choice.getAttribute('data-wizard') === 'widget' ? 2 : 10; renderWizard(); }
+  });
+}
+if (wizardAction) {
+  wizardAction.addEventListener('click', async () => {
+    if (wizardStep === 0) {
+      try {
+        const res = await chrome.runtime.sendMessage({ type: 'getStatus' });
+        if (res && res.connected) { wizardStep = 1; renderWizard(); }
+        else { wizardBody.innerHTML += '<br><br><b class="wizard-error">OBS не отвечает.</b> Проверьте, что сервер WebSocket включён и порт 4455.'; }
+      } catch (e) { wizardBody.innerHTML += '<br><br><b class="wizard-error">OBS не отвечает.</b>'; }
+    } else if (wizardStep === 2) {
+      wizardStep = 3; renderWizard();
+    } else if (wizardStep === 3) {
+      wizardStep = 4; renderWizard();
+    } else if (wizardStep === 4) {
+      closeWizard();
+    } else if (wizardStep === 10) {
+      const cb = document.getElementById('textEnabled');
+      if (cb) { cb.checked = true; cb.dispatchEvent(new Event('change')); }
+      closeWizard();
+    } else { closeWizard(); }
+  });
+}
+
+/* wizard waits for user actions */
+if (typeof styleOptions !== 'undefined' && styleOptions) {
+  styleOptions.addEventListener('click', () => { if (wizard && !wizard.hidden && wizardStep === 11) closeWizard(); });
+}
+if (typeof textEnabledInput !== 'undefined' && textEnabledInput) {
+  textEnabledInput.addEventListener('change', () => { if (wizard && !wizard.hidden && wizardStep === 10 && textEnabledInput.checked) { wizardStep = 11; renderWizard(); } });
+}
+if (typeof textSrcPop !== 'undefined' && textSrcPop) {
+  textSrcPop.addEventListener('click', () => { if (wizard && !wizard.hidden && wizardStep === 11) closeWizard(); });
+}
+
+/* close dropdowns on outside click */
+document.addEventListener('click', (e) => {
+  document.querySelectorAll('details.style-dd[open]').forEach((d) => {
+    if (!d.contains(e.target)) d.open = false;
+  });
 });

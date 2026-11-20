@@ -4,7 +4,7 @@
   "short_name": "Music Widget",
   "author": "Stepanchikkk",
   "homepage_url": "https://github.com/Stepanchikkk/music-widget-obs",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Отображает название и статус текущего трека в OBS. github.com/Stepanchikkk/music-widget-obs",
   "permissions": [
     "storage",
