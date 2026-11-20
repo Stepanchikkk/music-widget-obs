@@ -241,8 +241,23 @@ function send(data) {
   updateTextSource(data);
 }
 
+function isMutedTrack(track) {
+  if (!track) return false;
+  if (track.tabMuted === true) return true;
+  if (track.data && track.data.mutedKnown === false) return false;
+  return !!(track.data && track.data.muted);
+}
+
 function trackWeight(track) {
-  return (track.data.state === 'playing' ? 2 : 1) + (track.data.muted ? 0 : 2);
+  var d = track.data || {};
+  var sk = (d.stateKnown === undefined) ? true : !!d.stateKnown;
+  var mk = (d.mutedKnown === undefined) ? sk : !!d.mutedKnown;
+  var tabMuted = track.tabMuted === true;          // вкладка замьючена средствами Chrome
+  var muted = (mk ? !!d.muted : false) || tabMuted;
+  var knownMute = mk || tabMuted;
+  var base = (d.state === 'playing' ? 2 : 1);
+  if (!sk) return base + 3;
+  return base + 2 + (knownMute ? (muted ? 0 : 2) : 0);
 }
 
 function pickAndSend(force) {
@@ -264,11 +279,13 @@ function pickAndSend(force) {
     }
   }
 
-  // Прилипчивость: новый играющий источник со звуком не перебивает уже
-  // играющий источник со звуком. Смена — только на строго более высокий ранг.
+  // Прилипчивость: пока текущий источник играет и не замьючен, новый такой же
+  // его не перебивает. Смена — только если текущий замолчал/замьючен/встал.
   if (activeTabId != null && tracks.has(activeTabId)) {
     var cur = tracks.get(activeTabId);
-    if (!best || trackWeight(cur) >= trackWeight(best)) { best = cur; bestTabId = activeTabId; }
+    var curStrong = cur.data.state === 'playing' && !isMutedTrack(cur);
+    if (curStrong) { best = cur; bestTabId = activeTabId; }
+    else if (!best || trackWeight(cur) >= trackWeight(best)) { best = cur; bestTabId = activeTabId; }
   }
 
   if (best) {

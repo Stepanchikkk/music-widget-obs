@@ -1,16 +1,54 @@
 (function(){
 if (window.__mwContentInterval) { clearInterval(window.__mwContentInterval); window.__mwContentInterval = null; }
 
+var ALBUM_JUNK = /^(недавно прослушанные|recently played|плейлист|моя музыка|мои треки|мне нравится|новинки|рекомендации|альбом)$/i;
+
+function isJunkAlbum(s) {
+  var t = String(s || '').trim();
+  return !t || ALBUM_JUNK.test(t);
+}
+
+// VK (vk.com/vk.ru) кладёт в MediaMetadata.album название секции интерфейса,
+// настоящий альбом есть только ссылкой в DOM.
+function readVkAlbum() {
+  if (!/(^|\.)vk\.(com|ru)$/.test(location.hostname)) return '';
+  var links = document.querySelectorAll('a[href*="/music/album/"], a[href*="/audio?album"], a[href*="/music/playlist/"]');
+  for (var i = 0; i < links.length; i++) {
+    var t = (links[i].textContent || '').replace(/\s+/g, ' ').trim();
+    if (t && t.length < 120 && !isJunkAlbum(t)) return t;
+  }
+  return '';
+}
+
+var mwHook = null;
+if (!window.__mwHookListen) {
+  window.__mwHookListen = true;
+  window.addEventListener('message', function (e) {
+    if (e.source !== window) return;
+    var d = e.data;
+    if (d && d.__mwMedia) mwHook = d.__mwMedia;
+  });
+}
+function isVkHost() { return /(^|\.)vk\.(com|ru)$/.test(location.hostname); }
+function readVkHook() {
+  if (!mwHook) return null;
+  if (Date.now() - (mwHook.at || 0) > 3000) return null;
+  return mwHook;
+}
+
 function readMedia() {
   const ms = navigator.mediaSession;
   if (!ms || !ms.metadata) return null;
   const m = ms.metadata;
+  var album = m.album || '';
+  if (isJunkAlbum(album)) album = readVkAlbum();
   return {
     title: m.title || '',
     artist: m.artist || '',
-    album: m.album || '',
+    album: album,
     artwork: (m.artwork && m.artwork.length > 0) ? m.artwork[m.artwork.length - 1].src : '',
-    state: ms.playbackState === 'paused' ? 'paused' : 'playing'
+    state: ms.playbackState === 'paused' ? 'paused' : 'playing',
+    stateKnown: ms.playbackState === 'paused' || ms.playbackState === 'playing'
   };
 }
 
@@ -102,7 +140,7 @@ function readDomMedia() {
     // Иконка громкости у сайта бывает в mute при реально играющем звуке
     // (volume 0.02 + audible), поэтому приоритет радио не занижаем.
     const art = (img && img.src) ? img.src : (stationImg && stationImg.src ? stationImg.src : '');
-    return { title: rTitle, artist: rArtist, album: station, artwork: art, state: isPlaying ? 'playing' : 'paused', muted: false };
+    return { title: rTitle, artist: rArtist, album: station, artwork: art, state: isPlaying ? 'playing' : 'paused', muted: false, stateKnown: true, mutedKnown: true };
   }
   const titleEl = document.querySelector('[data-testid="context-item-info-title"]');
   const artistEl = document.querySelector('[data-testid="context-item-info-artist"]');
@@ -115,7 +153,7 @@ function readDomMedia() {
   const artwork = img?.src || '';
   const playBtn = document.querySelector('[data-testid="control-button-playpause"]');
   const label = playBtn?.getAttribute('aria-label') || '';
-  return { title, artist, artwork, state: (label === 'Пауза' || label === 'Pause') ? 'playing' : 'paused' };
+  return { title, artist, artwork, state: (label === 'Пауза' || label === 'Pause') ? 'playing' : 'paused', stateKnown: !!label, mutedKnown: true };
 }
 
 function pickPrimaryMedia() {
@@ -334,10 +372,18 @@ function tick() {
     }
     ghostCount = 0;
     nullCount = 0;
-    if (primary) data.state = primary.paused ? 'paused' : 'playing';
+    if (primary) { data.state = primary.paused ? 'paused' : 'playing'; data.stateKnown = true; data.mutedKnown = true; }
+    var hook = isVkHost() ? readVkHook() : null;
+    if (hook && typeof hook.paused === 'boolean') {
+      data.state = hook.paused ? 'paused' : 'playing';
+      data.stateKnown = true;
+      data.mutedKnown = true;
+      data.muted = !!hook.muted;
+    }
+
     if (isYTAd(data)) return;
 
-    const timing = readTiming() || (primary && isFinite(primary.duration) && primary.duration > 0 ? { currentTime: primary.currentTime, duration: primary.duration } : null) || readVideoTiming() || readDomTiming();
+    const timing = (hook && hook.duration > 0 ? { currentTime: hook.currentTime || 0, duration: hook.duration } : null) || readTiming() || (primary && isFinite(primary.duration) && primary.duration > 0 ? { currentTime: primary.currentTime, duration: primary.duration } : null) || readVideoTiming() || readDomTiming();
     var curTime = timing?.currentTime || 0;
     var dur = timing?.duration || 0;
     // The-Radio.ru — живой поток: duration/currentTime HLS-элемента не про песню.
@@ -405,6 +451,8 @@ function tick() {
       muted: (data.muted !== undefined) ? data.muted : (primary ? (primary.muted || primary.volume === 0) : isMuted()),
       currentTime: curTime,
       duration: dur,
+      stateKnown: data.stateKnown === true || !!primary,
+      mutedKnown: data.mutedKnown === true || !!primary || data.stateKnown === true,
       ts: Date.now()
     });
   } catch (e) {
