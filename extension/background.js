@@ -290,57 +290,6 @@ function pickAndSend(force) {
   }
 }
 
-const UPDATE_API_URL = 'https://api.github.com/repos/Stepanchikkk/music-widget-obs/releases/latest';
-const RELEASES_URL = 'https://github.com/Stepanchikkk/music-widget-obs/releases/latest';
-const UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000;
-
-function cmpVersions(a, b) {
-  var pa = String(a).replace(/^v/i, '').split('.');
-  var pb = String(b).replace(/^v/i, '').split('.');
-  for (var i = 0; i < Math.max(pa.length, pb.length); i++) {
-    var x = parseInt(pa[i], 10) || 0;
-    var y = parseInt(pb[i], 10) || 0;
-    if (x > y) return 1;
-    if (x < y) return -1;
-  }
-  return 0;
-}
-
-function setUpdateBadge(has) {
-  try {
-    chrome.action.setBadgeText({ text: has ? '1' : '' });
-    if (has) chrome.action.setBadgeBackgroundColor({ color: '#e05252' });
-  } catch (e) {}
-}
-
-function checkForUpdate(force) {
-  return new Promise(function(resolve) {
-    chrome.storage.local.get({ updateAvailable: false, latestVersion: '', releaseUrl: RELEASES_URL, lastUpdateCheck: 0 }, function(items) {
-      var now = Date.now();
-      var cached = { updateAvailable: !!items.updateAvailable, latestVersion: items.latestVersion || '', releaseUrl: items.releaseUrl || RELEASES_URL };
-      if (!force && now - (items.lastUpdateCheck || 0) < UPDATE_INTERVAL_MS) {
-        setUpdateBadge(cached.updateAvailable);
-        resolve(cached);
-        return;
-      }
-      fetch(UPDATE_API_URL, { cache: 'no-store', headers: { 'Accept': 'application/vnd.github+json' } })
-        .then(function(r) { return r.json(); })
-        .then(function(rel) {
-          var latest = (rel && rel.tag_name) ? String(rel.tag_name) : '';
-          var url = (rel && rel.html_url) ? String(rel.html_url) : RELEASES_URL;
-          var has = latest ? cmpVersions(latest, chrome.runtime.getManifest().version) > 0 : false;
-          chrome.storage.local.set({ updateAvailable: has, latestVersion: latest, releaseUrl: url, lastUpdateCheck: now });
-          setUpdateBadge(has);
-          resolve({ updateAvailable: has, latestVersion: latest, releaseUrl: url });
-        })
-        .catch(function() {
-          setUpdateBadge(cached.updateAvailable);
-          resolve(cached);
-        });
-    });
-  });
-}
-
 function summarizeTrack(d) {
   if (!d) return null;
   var o = {};
@@ -459,10 +408,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
-  if (msg.type === 'checkUpdate') {
-    checkForUpdate(false).then(function(res) { sendResponse(res); });
-    return true;
-  }
 
   if (msg.type === 'getStatus') {
     sendResponse({
@@ -511,7 +456,6 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     connect();
     sweepTabs();
     pickAndSend(true);
-    checkForUpdate(false);
   }
 });
 
@@ -532,7 +476,6 @@ chrome.storage.local.get({ wsPort: DEFAULT_PORT, widgetStyle: 'classic', wsPassw
   textGap = Math.max(0, Math.min(50, Number(items.textGap) || 0));
   settingsReady = true;
   connect();
-  checkForUpdate(false);
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
