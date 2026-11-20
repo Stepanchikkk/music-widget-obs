@@ -3,6 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <style>
+  :root {
+    --mw-primary: #7c6cff;
+    --mw-primary-hover: #8b7cf7;
+    --mw-text: #d0d0d8;
+    --mw-text-2: #8d8d9c;
+    --mw-text-3: #6f6f7c;
+    --mw-surface: rgba(255,255,255,0.05);
+    --mw-surface-2: rgba(255,255,255,0.08);
+    --mw-border: rgba(255,255,255,0.12);
+    --mw-border-hover: rgba(255,255,255,0.22);
+    --mw-radius: 10px;
+    --mw-radius-lg: 14px;
+    --mw-shadow: 0 1px 3px rgba(0,0,0,0.35);
+    --mw-control-h: 34px;
+    --mw-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --mw-mono: ui-monospace, Consolas, monospace;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     width: 330px;
@@ -25,7 +42,7 @@
     align-items: center;
     gap: 10px;
     padding: 14px 16px;
-    background: linear-gradient(135deg, #5a4bd1, #8b7cf7);
+    background: linear-gradient(135deg, #5a4bd1, var(--mw-primary-hover));
   }
   .header svg { flex-shrink: 0; }
   .header h1 { font-size: 14px; font-weight: 600; color: #fff; }
@@ -37,39 +54,13 @@
     font-weight: 600;
     color: rgba(255,255,255,0.6);
     padding: 2px 8px;
-    border-radius: 4px;
+    border-radius: var(--mw-radius);
     border: 1px solid rgba(255,255,255,0.15);
     flex-shrink: 0;
     user-select: none;
   }
   .lang-switch:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
 
-  .update-bar {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding: 6px 12px;
-    background: linear-gradient(135deg, #a33229, #c0453a);
-    color: #ffe9e6;
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    line-height: 1.25;
-    text-align: center;
-    cursor: pointer;
-    user-select: none;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.25);
-  }
-  .update-bar.show { display: flex; }
-  .update-bar:hover { color: #fff; background: linear-gradient(135deg, #b83a30, #d05246); }
-  .update-arrow { display: inline-block; animation: update-pulse 2.4s ease-in-out infinite; }
-  .update-go { opacity: 0.8; transition: transform 0.15s ease, opacity 0.15s ease; }
-  .update-bar:hover .update-go { transform: translateX(2px); opacity: 1; }
-  @keyframes update-pulse {
-    0%, 100% { opacity: 1; transform: translateY(0); }
-    50% { opacity: 0.45; transform: translateY(-1px); }
-  }
 
   .section-title-row {
     display: flex;
@@ -80,7 +71,7 @@
   .section-title-row .section-title { margin-bottom: 0; }
   .track-source { font-size: 10px; color: #666; }
 
-  .section { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .section { padding: 12px 16px; border-bottom: 1px solid var(--mw-border); }
   .section:last-of-type { border-bottom: none; }
   .section-title {
     font-size: 10px;
@@ -119,16 +110,8 @@
     flex-direction: column;
     gap: 8px;
   }
-  .field-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .field-row label {
-    min-width: 56px;
-    font-size: 12px;
-    color: #888;
-  }
+  .field-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+  .field-row label { font-size: 13px; color: var(--mw-text); white-space: nowrap; flex: none; }
   .field-row input[type="text"], .field-row input[type="password"] {
     flex: 1;
     padding: 6px 10px;
@@ -144,66 +127,24 @@
   .field-row input:focus { border-color: #6C5CE7; }
   .field-row input::placeholder { color: #555; }
 
-  .btn-row {
-    display: flex;
-    gap: 6px;
-    margin-top: 2px;
-  }
-  .btn {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 5px;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .btn-primary {
-    background: #5a4bd1;
-    color: #fff;
-  }
+  .btn-row { display: flex; justify-content: center; padding-top: 8px; }
+  .btn { width: auto; height: 34px; padding: 0 12px; border-radius: var(--mw-radius); border: 1px solid var(--mw-border); background: var(--mw-surface); color: var(--mw-text); font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-primary { background: var(--mw-primary); border-color: var(--mw-primary); color: #fff; }
+  .btn-primary:hover { background: var(--mw-primary-hover); border-color: var(--mw-primary-hover); }
   .btn-primary:hover { background: #6c5ce7; }
   .btn-secondary {
     background: rgba(255,255,255,0.08);
     color: #aaa;
   }
   .btn-secondary:hover { background: rgba(255,255,255,0.14); color: #ddd; }
-  .style-select {
-    width: 100%;
-    padding: 6px 10px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 5px;
-    font-size: 12px;
-    color: #d0d0d8;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
+  .style-select { height: 34px; padding: 0 8px; background: var(--mw-surface); border: 1px solid var(--mw-border); border-radius: var(--mw-radius); color: #d0d0d8; font-size: 12px; outline: none; }
   .style-select:focus { border-color: #6C5CE7; }
   .style-select option { background: #1a1a24; color: #d0d0d8; }
 
   /* Custom style dropdown */
-  .style-dd {
-    position: relative;
-    user-select: none;
-  }
-  .style-dd summary {
-    list-style: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    min-height: 30px;
-    padding: 6px 10px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 5px;
-    font-size: 12px;
-    color: #d0d0d8;
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
+  .style-dd { position: relative; user-select: none; }
+  .style-dd[open] > .style-options { display: block; }
+  .style-dd summary { list-style: none; display: flex; align-items: center; justify-content: space-between; width: 100%; height: 34px; padding: 0 10px; background: var(--mw-surface); border: 1px solid var(--mw-border); border-radius: var(--mw-radius); font-size: 12px; color: #d0d0d8; cursor: pointer; transition: border-color 0.15s; }
   .style-dd summary::-webkit-details-marker { display: none; }
   .style-dd[open] summary { border-color: #6C5CE7; }
   .style-dd summary::after,
@@ -221,34 +162,14 @@
   .text-details > summary:hover::after { border-color: #c9c2ff; }
   .style-dd[open] summary::after,
   .text-details[open] > summary::after { transform: rotate(45deg); }
-  .style-dd summary:hover { background: rgba(255,255,255,0.09); }
-  .text-details > summary:hover { background: none; }
+  .style-dd summary:hover { border-color: var(--mw-border-hover); }
   .text-details > summary:hover .section-title { color: #fff; }
-  .style-options {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    margin-top: 2px;
-    background: #1a1a24;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 5px;
-    max-height: 200px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.14) transparent;
-  }
-  .style-option {
-    padding: 6px 10px;
-    font-size: 12px;
-    color: #d0d0d8;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
+  .text-details > summary:hover .section-title { color: #fff; }
+  .style-options { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30; max-height: 220px; overflow-y: auto; background: #1b1b23; border: 1px solid var(--mw-border); border-radius: var(--mw-radius); padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.45); }
+  .style-option { padding: 7px 9px; border-radius: 6px; font-size: 12px; color: var(--mw-text); cursor: pointer; }
   .style-options { padding: 4px; }
-  .src-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 5px; cursor: pointer; font-size: 12px; color: #b9b9c6; user-select: none; }
-  .src-item:hover { background: rgba(255,255,255,0.05); }
+  .src-item { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--mw-text); user-select: none; }
+  .src-item:hover { background: var(--mw-surface); }
   .style-option:hover { background: rgba(90,75,209,0.25); }
   .style-option.active { background: rgba(90,75,209,0.4); color: #fff; }
 
@@ -289,7 +210,7 @@
     padding: 1px 5px;
     border-radius: 3px;
     font-size: 11px;
-    color: #8b7cf7;
+    color: var(--mw-primary-hover);
   }
   .step .hint {
     font-size: 11px;
@@ -297,9 +218,17 @@
     margin-top: 3px;
     line-height: 1.5;
   }
+  .step-body { flex: 1; min-width: 0; }
+  .widget-link { display: flex; align-items: center; margin: 8px 0 0; border: 1px solid rgba(255,255,255,0.14); border-radius: var(--mw-radius); background: rgba(255,255,255,0.04); padding: 2px; }
+  .widget-link:focus-within { border-color: var(--mw-primary); }
+  .widget-url { flex: 1; min-width: 0; height: 30px; padding: 0 8px; border: none; background: transparent; outline: none; font-family: ui-monospace, Consolas, monospace; font-size: 11px; color: #c9c2ff; }
+  .icon-btn { flex: none; width: 28px; height: 28px; margin-right: 1px; border: none; border-radius: var(--mw-radius); background: transparent; color: #8d8d9c; cursor: pointer; font-size: 15px; line-height: 1; display: grid; place-items: center; }
+  .icon-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .fallback-link { display: block; margin: 6px 0 0; font-size: 10px; color: var(--mw-text-3); text-decoration: none; cursor: default; }
+
   .step .hint code {
     font-size: 10px;
-    color: #8b7cf7;
+    color: var(--mw-primary-hover);
   }
 
   .status-text { font-size: 12px; }
@@ -310,7 +239,7 @@
     border-top: 1px solid rgba(255,255,255,0.06);
   }
   .footer-link a {
-    color: #8b7cf7;
+    color: var(--mw-primary-hover);
     font-size: 11px;
     text-decoration: none;
   }
@@ -318,10 +247,10 @@
   .footer-sep { color: #444; margin: 0 4px; }
 
   /* Text in OBS */
-  .text-details > summary { list-style: none; cursor: pointer; padding: 0; margin: 0; border-radius: 6px; }
+  .text-details > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 4px 0; margin: 0; border-radius: var(--mw-radius); }
   .text-details > summary::-webkit-details-marker { display: none; }
-  .text-details > summary .section-title { margin-bottom: 0; }
-  .text-details .field-row > label:not(.check-row) { width: 72px; min-width: 72px; }
+  .text-details > summary .section-title { margin-bottom: 0; font-size: 13px; letter-spacing: 0; text-transform: none; color: var(--mw-text); }
+  .text-details .field-row > label:not(.check-row) { width: auto; min-width: 0; }
   .text-details > summary .track-source { margin-left: auto; }
   .text-details .settings-grid { margin-top: 8px; }
   .text-src-dd { flex: 1; min-width: 0; }
@@ -337,21 +266,23 @@
   .text-src-empty { color: #c66; }
   .check-row { display: flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; font-size: 12px; color: #b9b9c6; }
   .check-row span { cursor: pointer; }
-  input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 4px; flex: none; position: relative; margin: 0; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04); cursor: pointer; transition: background .15s, border-color .15s, box-shadow .15s; }
+  input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: var(--mw-radius); flex: none; position: relative; margin: 0; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04); cursor: pointer; transition: background .15s, border-color .15s, box-shadow .15s; }
   input[type="checkbox"]:hover { border-color: #6C5CE7; }
   input[type="checkbox"]:checked { background: #6C5CE7; border-color: #6C5CE7; box-shadow: 0 0 0 2px rgba(108,92,231,0.18); }
   input[type="checkbox"]:not(.switch):checked::after { content: ''; position: absolute; left: 3.5px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 1.8px 1.8px 0; transform: rotate(45deg); }
-  input[type="checkbox"].switch { width: 30px; height: 17px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.15); }
+  input[type="checkbox"].switch { width: 30px; height: 17px; border-radius: 999px; background: var(--mw-border); border: 1px solid rgba(255,255,255,0.15); }
   input[type="checkbox"].switch::after { content: ''; position: absolute; top: 1px; left: 1px; width: 13px; height: 13px; border-radius: 50%; background: #aaa; transform: none; border: none; transition: transform .2s, background .2s; }
   input[type="checkbox"].switch:checked { background: #5a4bd1; border-color: #5a4bd1; box-shadow: none; }
   input[type="checkbox"].switch:checked::after { transform: translateX(13px); background: #fff; border: none; }
   .sep-select { flex: none; width: 66px; }
-  .style-input { width: 100%; padding: 6px 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; font-size: 12px; color: #d0d0d8; font-family: inherit; outline: none; }
+  .style-input { flex: 1; min-width: 0; height: 34px; padding: 0 10px; background: var(--mw-surface); border: 1px solid var(--mw-border); border-radius: var(--mw-radius); color: var(--mw-text); font-size: 12px; outline: none; transition: border-color 0.15s; }
+  .style-input:focus { border-color: var(--mw-primary); }
+  .style-input:focus { border-color: var(--mw-primary); }
   .style-input:focus { border-color: #6C5CE7; }
   .style-input::placeholder { color: #555; }
   .preview { padding: 7px 10px; border-radius: 6px; background: rgba(108,92,231,0.10); border: 1px solid rgba(108,92,231,0.28); color: #d8d4ff; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mini { width: 46px; padding: 4px 6px; text-align: center; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: #d0d0d8; font-size: 11px; outline: none; }
-  .mini:focus { border-color: #6C5CE7; }
+  .mini { width: 48px; height: 30px; padding: 0 8px; background: var(--mw-surface); border: 1px solid var(--mw-border); border-radius: var(--mw-radius); color: #d0d0d8; font-size: 12px; outline: none; }
+  .mini:focus { border-color: var(--mw-primary); }
   .mini-unit { font-size: 10px; color: #666; }
   .hint { font-size: 11px; color: #777; min-height: 14px; }
   .field-hint { font-size: 12px; color: #888; }
@@ -369,11 +300,6 @@
     <span class="lang-switch" id="langSwitch">EN</span>
   </div>
 
-  <div class="update-bar" id="updateBar">
-    <span class="update-arrow">&#11014;</span>
-    <span id="updateText"></span>
-    <span class="update-go">&#8250;</span>
-  </div>
 
   <div class="section">
     <div class="section-title">Подключение к OBS</div>
@@ -404,7 +330,6 @@
       <div class="field-row">
         <label>Пароль</label>
         <input type="checkbox" id="usePassword" class="switch">
-        <span class="field-hint">использовать</span>
       </div>
       <div class="field-row" id="passwordRow" hidden>
         <label></label>
@@ -417,48 +342,55 @@
   </div>
 
   <div class="section">
-    <details class="text-details">
-      <summary class="section-title-row">
-        <span class="section-title">Вывод в текстовый источник</span>
-        <span class="track-source" id="textSummaryMeta">выкл</span>
-      </summary>
-      <div class="settings-grid">
-        <div class="field-row">
-          <label>Вывод</label>
-          <label class="check-row"><input type="checkbox" id="textEnabled" class="switch"> <span>в Text-источник</span></label>
-        </div>
-        <div class="field-row">
-          <label>Источники</label>
-          <details class="style-dd text-src-dd" id="textSrcDD">
-            <summary><span class="dd-label">Выбрано: <span id="textSrcCount">0</span></span></summary>
-            <div class="style-options" id="textSrcPop"></div>
+    <div class="section-title" id="styleSectionTitle">Стиль виджета</div>
+    <details class="style-dd" id="styleDropdown">
+      <summary id="styleSummary">Классический</summary>
+      <div class="style-options" id="styleOptions"></div>
+    </details>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Текст в OBS</div>
+    <div class="field-row">
+      <label>Вывод в текстовый источник</label>
+      <input type="checkbox" id="textEnabled" class="switch">
+    </div>
+    <div class="text-settings" id="textSettings" hidden>
+      <div class="field-row">
+        <label>Источники</label>
+        <details class="style-dd text-src-dd" id="textSrcDD">
+          <summary><span class="dd-label">Выбрано: <span id="textSrcCount">0</span></span></summary>
+          <div class="style-options" id="textSrcPop"></div>
+        </details>
+      </div>
+      <div class="field-row">
+        <label>Формат</label>
+        <div class="fmt-pair">
+          <details class="style-dd text-format-dd" id="textFormatDD">
+            <summary><span class="dd-value" id="textFormatSummary">Artist — Title</span></summary>
+            <div class="style-options" id="textFormatOptions"></div>
+          </details>
+          <details class="style-dd text-sep-dd" id="textSepDD">
+            <summary><span class="dd-value" id="textSepSummary">—</span></summary>
+            <div class="style-options" id="textSepOptions"></div>
           </details>
         </div>
+      </div>
+      <div class="field-row" id="textCustomFormatRow" hidden>
+        <label></label>
+        <input class="style-input" id="textCustomFormat" placeholder="{artist} — {title}">
+      </div>
+      <div class="field-row" id="textCustomSepRow" hidden>
+        <label></label>
+        <input class="style-input" id="textCustomSep" placeholder="свой разделитель">
+      </div>
+      <div class="preview" id="textPreview">Artist — Title</div>
+      <div class="field-row">
+        <label>Прокрутка</label>
+        <input type="checkbox" id="textScroll" class="switch">
+      </div>
+      <div class="text-scroll-settings" id="textScrollSettings" hidden>
         <div class="field-row">
-          <label>Формат</label>
-          <div class="fmt-pair">
-            <details class="style-dd text-format-dd" id="textFormatDD">
-              <summary><span class="dd-value" id="textFormatSummary">Artist — Title</span></summary>
-              <div class="style-options" id="textFormatOptions"></div>
-            </details>
-            <details class="style-dd text-sep-dd" id="textSepDD">
-              <summary><span class="dd-value" id="textSepSummary">—</span></summary>
-              <div class="style-options" id="textSepOptions"></div>
-            </details>
-          </div>
-        </div>
-        <div class="field-row" id="textCustomFormatRow" hidden>
-          <label></label>
-          <input class="style-input" id="textCustomFormat" placeholder="{artist} — {title}">
-        </div>
-        <div class="field-row" id="textCustomSepRow" hidden>
-          <label></label>
-          <input class="style-input" id="textCustomSep" placeholder="свой разделитель">
-        </div>
-        <div class="preview" id="textPreview">Artist — Title</div>
-        <div class="field-row">
-          <label>Прокрутка</label>
-          <input type="checkbox" id="textScroll" class="switch">
           <label>Скорость</label>
           <input class="mini" id="textScrollSpeed" value="50">
           <span class="mini-unit">px/s</span>
@@ -468,20 +400,8 @@
           <input class="mini" id="textGap" value="8">
           <span class="mini-unit">симв.</span>
         </div>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="textSave">Применить</button>
-        </div>
-        <div id="textHint" class="hint"></div>
       </div>
-    </details>
-  </div>
-
-  <div class="section">
-    <div class="section-title" id="styleSectionTitle">Стиль виджета</div>
-    <details class="style-dd" id="styleDropdown">
-      <summary id="styleSummary">Классический</summary>
-      <div class="style-options" id="styleOptions"></div>
-    </details>
+    </div>
   </div>
 <canvas id="previewColorAnalyzer" width="10" height="10" hidden></canvas>
 
@@ -493,11 +413,18 @@
     </div>
     <div class="step">
       <div class="step-num">2</div>
-      <div class="step-text">Поставьте галочку <strong>Включить сервер WebSocket</strong>, порт <code>4455</code>. Если включён пароль — введите его в параметрах WebSocket ниже.</div>
+      <div class="step-text">Поставьте галочку <strong>Включить сервер WebSocket</strong>, порт <code>4455</code>. Если включён пароль — введите его в параметрах WebSocket.</div>
     </div>
     <div class="step">
       <div class="step-num">3</div>
-      <div class="step-text"><strong>Добавить источник</strong> &rarr; <strong>Браузер</strong> &rarr; <strong>Создать новый</strong> (можно задать название) &rarr; поставьте галочку <strong>Локальный файл</strong> &rarr; выберите <code>widget.html</code> из папки <code>music-widget-obs</code></div>
+      <div class="step-body">
+        <div class="step-text" id="step3Text"><strong>Добавить источник</strong> &rarr; <strong>Браузер</strong> &rarr; <strong>Создать новый</strong> &rarr; в поле <strong>URL</strong> вставьте:</div>
+        <div class="widget-link">
+          <input class="widget-url" id="widgetUrlCode" readonly>
+          <button class="icon-btn" id="copyWidgetUrl" type="button" aria-label="Скопировать" title="Скопировать">&#10697;</button>
+        </div>
+        <a class="fallback-link" id="downloadWidget" href="https://raw.githubusercontent.com/Stepanchikkk/music-widget-obs/master/widget.html" download>Не загружается? Скачать widget.html</a>
+      </div>
     </div>
   </div>
 
