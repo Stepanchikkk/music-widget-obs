@@ -1,0 +1,8 @@
+@font-face {
+  font-family: 'Digital Cyrillic';
+  src: url('digital-cyrillic.otf') format('opentype');
+}
+
+.stereo { background: url('stereo-bg.png') center/contain no-repeat !important; border: none !important; box-shadow: none !important; text-shadow: none !important; border-radius: 0 !important; animation: none !important; transition: none !important; }
+
+.stereo .stereo-display { position: absolute; font-family: 'Digital Cyrillic', monospace; color: #ff2020; text-shadow: 0 0 12px rgba(255, 0, 0, 0.9), 0 0 4px rgba(200, 0, 0, 0.6); z-index: 10; display: flex; align-items: center; justify-content: flex-start; padding: 0 1%; letter-spacing: 0; white-space: pre; overflow: hidden; }
