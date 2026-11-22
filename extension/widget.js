@@ -111,6 +111,7 @@ var wsWidget = null;
 var wsWidgetConnected = false;
 var showTrackKey = '';
 var syncId = null;
+var NO_MARQUEE = new URLSearchParams(location.search).get('still') === '1';
 var marqueeItems = [];
 var marqueeGen = 0;
 var marqueeTimer = null;
@@ -266,6 +267,7 @@ function setMarqueeText(el, text, gen) {
 }
 
 async function marqueeCycle(gen) {
+    if (NO_MARQUEE) return;
     if (gen !== marqueeGen) return;
     await sleep(3500);
     if (gen !== marqueeGen) return;

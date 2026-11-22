@@ -5,7 +5,7 @@
 .karaoke .kr-artist { font-size: 13vh; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--acc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
 .karaoke .kr-title-wrap { width: 100%; overflow: hidden; white-space: nowrap; padding: 0.3vh 0 1.3vh; }
-.karaoke .kr-title { display: inline-block; font-size: 34vh; font-weight: 800; letter-spacing: -0.025em; line-height: 1.16; color: var(--acc-text, #fff); }
+.karaoke .kr-title { display: inline-block; font-size: 34vh; font-weight: 800; letter-spacing: -0.025em; line-height: 1.34; color: var(--acc-text, #fff); }
 .karaoke .kr-title span { display: inline-block; }
 .karaoke .kr-title.active { animation: krMarquee var(--marquee-duration, 12s) linear 1 forwards; }
 .karaoke .kr-title.active span { padding-right: 3em; }
@@ -18,7 +18,7 @@
 .karaoke .kr-dur { color: var(--acc-dim, rgba(255, 255, 255, 0.45)); }
 
 .karaoke.v .kr-title-wrap { white-space: normal; overflow: visible; }
-.karaoke.v .kr-title { white-space: normal; line-height: 1.05; }
+.karaoke.v .kr-title { white-space: normal; line-height: 1.2; }
 .karaoke.v .kr-wrap { align-items: center; text-align: center; padding: 3vh; }
 .karaoke.v .kr-title { font-size: 17vh; }
 .karaoke.v .kr-artist { font-size: 9.5vh; }

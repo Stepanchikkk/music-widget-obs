@@ -42,7 +42,7 @@
 .blur .bl-title.active { animation: blMarquee var(--marquee-duration, 12s) linear 1 forwards; }
 .blur .bl-title span { display: inline-block; }
 .blur .bl-title.active span { padding-right: 3em; }
-.blur .bl-title, .blur .bl-title span { font-size: 36cqh; font-weight: 700; color: #fff; white-space: nowrap; line-height: 1.1; letter-spacing: -0.01em; text-shadow: 0 0.3vh 1.4vh rgba(0, 0, 0, 0.75); }
+.blur .bl-title, .blur .bl-title span { font-size: 36cqh; font-weight: 700; color: #fff; white-space: nowrap; line-height: 1.34; letter-spacing: -0.01em; text-shadow: 0 0.3vh 1.4vh rgba(0, 0, 0, 0.75); }
 .blur .bl-artist { font-size: 20cqh; color: rgba(255, 255, 255, 0.72); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0.2vh 1vh rgba(0, 0, 0, 0.7); }
 .blur .bl-status { font-size: 9vh; color: rgba(255, 255, 255, 0.85); text-shadow: 0 0.3vh 1.2vh rgba(0, 0, 0, 0.6); }
 
