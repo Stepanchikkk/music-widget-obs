@@ -87,7 +87,7 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 4. OK. Второй источник в другой сцене может иметь другой стиль, например `classic`.
 
-Доступные стили: `classic`, `compact`, `glass`, `glass-compact`, `minimal`, `stereo`, `fallout`.
+Доступные стили: `classic`, `compact`, `glass`, `glass-compact`, `minimal`, `stereo`, `fallout`, `vinyl`, `cover`, `blur`, `player`, `karaoke`.
 
 Если Custom CSS задан, виджет игнорирует стиль из попапа и фиксирует указанный в источнике.
 
@@ -125,7 +125,9 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
 
 ### Стили оформления
 
-Виджет поддерживает 7 стилей: `classic` (классический), `compact` (компактный), `glass` (стеклянный), `glass-compact` (компактный стеклянный), `minimal` (минималистичный), `stereo` (магнитола), `fallout` (PIP-Boy).
+Виджет поддерживает 12 стилей: `classic` (классический), `compact` (компактный), `glass` (стеклянный), `glass-compact` (компактный стеклянный), `minimal` (минималистичный), `stereo` (магнитола), `fallout` (PIP-Boy), `vinyl` (винил), `cover` (обложка), `blur` (размытие), `player` (плеер), `karaoke` (заголовок).
+
+Если у трека нет обложки, вместо неё подставляется заглушка — стили с обложкой не выглядят пустыми.
 
 <p align="center">
   <img src="screenshots/preview-classic.png" alt="Классический" width="450"><br>
@@ -162,13 +164,38 @@ OBS Studio 28+ имеет встроенный WebSocket сервер:
   <strong>PIP-Boy (<code>fallout</code>)</strong>
 </p>
 
+<p align="center">
+  <img src="screenshots/preview-vinyl.png" alt="Винил" width="450"><br>
+  <strong>Винил (<code>vinyl</code>)</strong>
+</p>
+
+<p align="center">
+  <img src="screenshots/preview-cover.png" alt="Обложка" width="450"><br>
+  <strong>Обложка (<code>cover</code>)</strong>
+</p>
+
+<p align="center">
+  <img src="screenshots/preview-blur.png" alt="Размытие" width="450"><br>
+  <strong>Размытие (<code>blur</code>)</strong>
+</p>
+
+<p align="center">
+  <img src="screenshots/preview-player.png" alt="Плеер" width="450"><br>
+  <strong>Плеер (<code>player</code>)</strong>
+</p>
+
+<p align="center">
+  <img src="screenshots/preview-karaoke.png" alt="Заголовок" width="450"><br>
+  <strong>Заголовок (<code>karaoke</code>)</strong>
+</p>
+
 Стиль можно переключать в pop-up расширения. Если нужно зафиксировать свой стиль для конкретного Browser Source (например, на разных сценах или несколько виджетов на одной сцене), вставьте в поле **Custom CSS** источника:
 
 ```css
 :root { --widget-style: 'stereo' }
 ```
 
-Где `stereo` заменить на `classic`, `compact`, `glass`, `minimal` или `fallout`. После этого виджет будет игнорировать настройки в pop-up и всегда показывать выбранный стиль.
+Где `stereo` заменить на `classic`, `compact`, `glass`, `glass-compact`, `minimal`, `stereo`, `fallout`, `vinyl`, `cover`, `blur`, `player` или `karaoke`. После этого виджет будет игнорировать настройки в pop-up и всегда показывать выбранный стиль.
 
 <p align="center"><img src="screenshots/multiple-styles.png" alt="Несколько стилей на разных сценах"></p>
 

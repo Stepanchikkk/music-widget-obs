@@ -103,6 +103,7 @@ var widget = document.getElementById('widget');
 var colorCanvas = document.getElementById('colorAnalyzer');
 
 var currentStyle = '';
+var requestedStyle = '';
 var lockedStyle = '';
 var lastTrackData = null;
 var watchDog = null;
@@ -156,10 +157,31 @@ function colors(img) {
     colorCanvas.width = 8; colorCanvas.height = 8;
     c.drawImage(img, 0, 0, 8, 8);
     var d = c.getImageData(0, 0, 8, 8).data;
-    var p = [];
-    for (var i = 0; i < d.length; i += 4) p.push([d[i], d[i+1], d[i+2]]);
-    p.sort(function(a,b){return (a[0]+a[1]+a[2])-(b[0]+b[1]+b[2]);});
-    return { dark: p[Math.floor(p.length*0.1)], light: p[Math.floor(p.length*0.7)] };
+    var p = [], best = null, bestScore = -1;
+    for (var i = 0; i < d.length; i += 4) {
+        var r = d[i], g = d[i + 1], b = d[i + 2];
+        var max = Math.max(r, g, b), min = Math.min(r, g, b);
+        var v = max / 255;
+        var s = max ? (max - min) / max : 0;
+        // предпочитаем насыщенные, но не чёрные пиксели
+        var score = (s * 0.75 + v * 0.25) * (v > 0.15 ? 1 : 0.25);
+        p.push([r, g, b]);
+        if (score > bestScore) { bestScore = score; best = [r, g, b]; }
+    }
+    if (best && bestScore > 0.12) {
+        // нормализуем найденный цвет к комфортной яркости и строим пару
+        var mx = Math.max(best[0], best[1], best[2]) || 1;
+        var k = 120 / mx;
+        var light = [
+            Math.min(255, Math.round(best[0] * k)),
+            Math.min(255, Math.round(best[1] * k)),
+            Math.min(255, Math.round(best[2] * k))
+        ];
+        var dark = [Math.round(light[0] * 0.35), Math.round(light[1] * 0.35), Math.round(light[2] * 0.35)];
+        return { dark: dark, light: light };
+    }
+    p.sort(function(a, b) { return (a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2]); });
+    return { dark: p[Math.floor(p.length * 0.1)], light: p[Math.floor(p.length * 0.7)] };
 }
 
 function applyColors(d, l, forStyle) {
@@ -286,7 +308,8 @@ function applyStyle(name) {
     showTrackKey = '';
     removePlaceholder();
     if (currentStyle && __STYLES[currentStyle]) __STYLES[currentStyle].destroy();
-    currentStyle = name || '';
+    requestedStyle = name || '';
+    currentStyle = __STYLES[requestedStyle] ? requestedStyle : 'classic';
     // style is not persisted: popup sends it via data._style
     if (__STYLES[currentStyle]) __STYLES[currentStyle].init();
     orient();
@@ -294,7 +317,7 @@ function applyStyle(name) {
 
 function handleTrackData(data) {
     if (!data) { showStatus(TXT[LANG].noMusic); return; }
-    if (!lockedStyle && data._style && data._style !== currentStyle) applyStyle(data._style);
+    if (!lockedStyle && data._style && data._style !== requestedStyle) applyStyle(data._style);
     else if (!currentStyle) applyStyle('classic');
     if (data.error) { lastTrackData = null; showStatus(TXT[LANG].noMusic); return; }
     lastTrackData = data;
@@ -368,7 +391,7 @@ window.addEventListener('resize', orient);
 
 var MOCK_DATA = new URLSearchParams(location.search).get('mock') ? {
     title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours',
-    thumbnail: '', state: 'playing', currentTime: 138, duration: 200, ts: Date.now()
+    thumbnail: (new URLSearchParams(location.search).get('cover') || window.__MW_MOCK_COVER || ''), state: 'playing', currentTime: 138, duration: 200, ts: Date.now()
 } : null;
 
 var PREVIEW = new URLSearchParams(location.search).get('preview');
@@ -414,7 +437,7 @@ if (MOCK_DATA) {
             } else { showStatus(e.data.connected ? TXT[LANG].noMusic : TXT[LANG].waiting); }
         } else if (e.data && e.data.type === 'setStyle') {
             applyStyle(e.data.style);
-            if (lastTrackData) { __STYLES[currentStyle].show(lastTrackData); resetWatchdog();
+            if (lastTrackData && __STYLES[currentStyle]) { __STYLES[currentStyle].show(lastTrackData); resetWatchdog();
             } else { showStatus(TXT[LANG].noMusic); }
         }
     });

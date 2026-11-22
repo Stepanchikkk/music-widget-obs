@@ -52,6 +52,16 @@ const L10N = {
     styleMinimal: '\u041c\u0438\u043d\u0438\u043c\u0430\u043b\u0438\u0441\u0442\u0438\u0447\u043d\u044b\u0439',
     styleStereo: '\u041c\u0430\u0433\u043d\u0438\u0442\u043e\u043b\u0430',
     styleFallout: 'Fallout',
+    styleVinyl: 'Винил',
+    styleVinylTip: 'Рекомендуемые размеры: горизонтально 600×200, вертикально 500×500',
+    styleCover: 'Обложка',
+    styleCoverTip: 'Рекомендуемые размеры: горизонтально 600×200, вертикально 500×500',
+    styleBlur: 'Размытие',
+    styleBlurTip: 'Рекомендуемый размер: горизонтально 600×200, квадрат 500×500',
+    stylePlayer: 'Плеер',
+    stylePlayerTip: 'Рекомендуемый размер: горизонтально 600×200, вертикально 360×480',
+    styleKaraoke: 'Заголовок',
+    styleKaraokeTip: 'Рекомендуемый размер: горизонтально 700×200, квадрат 420×420',
   },
   en: {
     title: 'Music Widget OBS',
@@ -104,6 +114,16 @@ const L10N = {
     styleMinimal: 'Minimal',
     styleStereo: 'Car Stereo',
     styleFallout: 'Fallout',
+    styleVinyl: 'Vinyl',
+    styleVinylTip: 'Recommended sizes: horizontal 600×200, vertical 500×500',
+    styleCover: 'Cover',
+    styleCoverTip: 'Recommended sizes: horizontal 600×200, vertical 500×500',
+    styleBlur: 'Blur',
+    styleBlurTip: 'Recommended size: 600×200 horizontal, 500×500 square',
+    stylePlayer: 'Player',
+    stylePlayerTip: 'Recommended size: 600×200 horizontal, 360×480 square',
+    styleKaraoke: 'Headline',
+    styleKaraokeTip: 'Recommended size: 700×200 horizontal, 420×420 square',
   }
 };
 
@@ -181,6 +201,11 @@ const STYLES = [
   { id: 'minimal', key: 'styleMinimal' },
   { id: 'stereo', key: 'styleStereo' },
   { id: 'fallout', key: 'styleFallout' },
+  { id: 'vinyl', key: 'styleVinyl', tip: 'styleVinylTip', tipDelay: 350 },
+  { id: 'cover', key: 'styleCover', tip: 'styleCoverTip', tipDelay: 350 },
+  { id: 'blur', key: 'styleBlur', tip: 'styleBlurTip', tipDelay: 350 },
+  { id: 'player', key: 'stylePlayer', tip: 'stylePlayerTip', tipDelay: 350 },
+  { id: 'karaoke', key: 'styleKaraoke', tip: 'styleKaraokeTip', tipDelay: 350 },
 ];
 
 function T(key, vars) {
@@ -616,11 +641,21 @@ function hideTip() {
   tipTarget = null;
 }
 
+let tipDelayTimer = null;
+
+function scheduleTip(target) {
+  clearTimeout(tipDelayTimer);
+  const delay = parseInt(target.getAttribute('data-tip-delay') || '0', 10) || 0;
+  if (!delay) { showTip(target); return; }
+  tipDelayTimer = setTimeout(() => showTip(target), delay);
+}
+
 document.addEventListener('mouseover', (e) => {
   const t = e.target.closest('[data-tip]');
-  if (t && t !== tipTarget) showTip(t);
+  if (t && t !== tipTarget) scheduleTip(t);
 });
 document.addEventListener('mouseout', (e) => {
+  clearTimeout(tipDelayTimer);
   const t = e.target.closest('[data-tip]');
   if (t && t === tipTarget && !t.contains(e.relatedTarget)) hideTip();
 });
@@ -721,7 +756,8 @@ bindHelp('textHelpBtn', 'textHelp');
 
 function buildStyleOptions() {
   styleOptions.innerHTML = STYLES.map(s =>
-    '<div class="style-option' + (s.id === currentStyle ? ' active' : '') + '" data-style="' + s.id + '">' +
+    '<div class="style-option' + (s.id === currentStyle ? ' active' : '') + '" data-style="' + s.id + '"' +
+      (s.tip ? ' data-tip="' + T(s.tip) + '" data-tip-delay="' + (s.tipDelay || 0) + '"' : '') + '>' +
       '<span>' + T(s.key) + '</span>' +
       '<button class="style-copy" type="button" data-copy-style="' + s.id + '" data-tip="' + T('copyStyleTitle') + '" aria-label="' + T('copyStyleTitle') + '">&#10697;</button>' +
     '</div>'
