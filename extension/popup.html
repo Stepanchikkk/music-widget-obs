@@ -74,6 +74,29 @@
 
   .section { padding: 12px 16px; border-bottom: 1px solid var(--mw-border); }
   .section:last-of-type { border-bottom: none; }
+  .style-row { display: flex; align-items: center; gap: 8px; }
+  .style-row .style-dd { flex: 1; min-width: 0; }
+  .style-row .icon-btn { margin-right: -6px; }
+  .section-head .btn-help { margin-right: -6px; }
+  .btn-help { position: relative; width: 28px; height: 28px; margin-right: 1px; display: grid; place-items: center; flex: none; padding: 0; border: none; background: transparent; color: var(--mw-text-3); font-size: 11px; font-weight: 700; line-height: 1; cursor: pointer; }
+  .btn-help::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; border: 1px solid var(--mw-border); }
+  .btn-help:hover { color: #fff; }
+  .btn-help:hover::before { border-color: var(--mw-border-hover); }
+  .help-wrap { position: relative; display: inline-flex; }
+  .help-pop { position: absolute; top: 24px; right: 0; width: 248px; z-index: 60; padding: 10px 12px; border-radius: 10px; background: #1d1d24; border: 1px solid var(--mw-border); box-shadow: 0 12px 32px rgba(0,0,0,0.6); }
+  .help-pop.help-pop-up { top: auto; bottom: 24px; }
+  .help-pop p { font-size: 11px; color: var(--mw-text-2); line-height: 1.5; }
+  .help-pop-hint { margin-top: 6px; color: var(--mw-text-3) !important; }
+  .help-pop .btn { margin-top: 8px; height: 28px; padding: 0 12px; font-size: 11px; }
+  .style-option { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .style-copy { opacity: 0; border: none; background: transparent; color: var(--mw-text-3); cursor: pointer; font-size: 12px; padding: 0 2px; transition: opacity 0.12s; }
+  .style-option:hover .style-copy, .style-copy:focus-visible { opacity: 1; }
+  .style-copy:hover { color: #fff; }
+  .style-option-base { border-top: 1px solid var(--mw-border); margin-top: 4px; padding-top: 6px; color: var(--mw-text-2); }
+  .tip { position: fixed; z-index: 300; left: 0; top: 0; max-width: min(232px, calc(100vw - 16px)); padding: 7px 9px; border-radius: 8px; background: #1d1d24; border: 1px solid var(--mw-border); color: var(--mw-text); font-size: 11px; line-height: 1.45; box-shadow: 0 10px 28px rgba(0,0,0,0.6); pointer-events: none; opacity: 0; transition: opacity 0.12s; }
+  .tip.show { opacity: 1; }
+  .toast { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 200; padding: 9px 12px; border-radius: var(--mw-radius); background: #1d1d24; border: 1px solid var(--mw-border); color: var(--mw-text); font-size: 11px; line-height: 1.45; box-shadow: 0 8px 24px rgba(0,0,0,0.5); opacity: 0; transform: translateY(6px); transition: opacity 0.15s, transform 0.15s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
   .section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
   .section-head .section-title { margin-bottom: 0; }
   .section-title {
@@ -108,6 +131,11 @@
     margin-top: 3px;
   }
 
+  .ws-grid { gap: 6px; }
+  .ws-grid .field-row { padding: 4px 0; }
+  .ws-top .ws-port { width: 84px; }
+  .ws-top .ws-pw-label { margin-left: auto; }
+  .ws-grid #passwordInput { flex: 1; min-width: 0; }
   .settings-grid {
     display: flex;
     flex-direction: column;
@@ -341,17 +369,14 @@
 
   <div class="section">
     <div class="section-title" id="wsSection">Параметры WebSocket</div>
-    <div class="settings-grid">
-      <div class="field-row">
-        <label>Порт</label>
-        <input type="text" id="portInput" placeholder="4455">
-      </div>
-      <div class="field-row">
-        <label>Пароль</label>
+    <div class="settings-grid ws-grid">
+      <div class="field-row ws-top">
+        <label for="portInput">Порт</label>
+        <input type="text" id="portInput" class="ws-port" placeholder="4455">
+        <label for="usePassword" class="ws-pw-label">Пароль</label>
         <input type="checkbox" id="usePassword" class="switch">
       </div>
       <div class="field-row" id="passwordRow" hidden>
-        <label></label>
         <input type="password" id="passwordInput" placeholder="Пароль OBS WebSocket">
       </div>
       <div class="btn-row">
@@ -361,15 +386,37 @@
   </div>
 
   <div class="section">
-    <div class="section-title" id="styleSectionTitle">Стиль виджета</div>
-    <details class="style-dd" id="styleDropdown">
-      <summary id="styleSummary">Классический</summary>
-      <div class="style-options" id="styleOptions"></div>
-    </details>
+    <div class="section-head">
+      <span class="section-title" id="styleSectionTitle">Стиль виджета</span>
+      <span class="help-wrap">
+        <button class="btn-help" id="styleHelpBtn" type="button" aria-label="Справка">?</button>
+        <div class="help-pop" id="styleHelp" hidden>
+          <p id="styleHelpText"></p>
+          <p class="help-pop-hint" id="styleHelpHint"></p>
+          <button class="btn btn-secondary" id="copyBaseLink" type="button"></button>
+        </div>
+      </span>
+    </div>
+    <div class="style-row">
+      <details class="style-dd" id="styleDropdown">
+        <summary id="styleSummary">Классический</summary>
+        <div class="style-options" id="styleOptions"></div>
+      </details>
+      <button class="icon-btn" id="copyStyleLink" type="button" aria-label="Скопировать ссылку со стилем">&#10697;</button>
+    </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Текст в OBS</div>
+    <div class="section-head">
+      <span class="section-title">Текст в OBS</span>
+      <span class="help-wrap">
+        <button class="btn-help" id="textHelpBtn" type="button" aria-label="Справка">?</button>
+        <div class="help-pop" id="textHelp" hidden>
+          <p id="textHelpText"></p>
+          <p class="help-pop-hint" id="textHelpHint"></p>
+        </div>
+      </span>
+    </div>
     <div class="field-row">
       <label>Вывод в текстовый источник</label>
       <input type="checkbox" id="textEnabled" class="switch">
@@ -440,7 +487,7 @@
         <div class="step-text" id="step3Text"><strong>Добавить источник</strong> &rarr; <strong>Браузер</strong> &rarr; <strong>Создать новый</strong> &rarr; в поле <strong>URL</strong> вставьте:</div>
         <div class="widget-link">
           <input class="widget-url" id="widgetUrlCode" readonly>
-          <button class="icon-btn" id="copyWidgetUrl" type="button" aria-label="Скопировать" title="Скопировать">&#10697;</button>
+          <button class="icon-btn" id="copyWidgetUrl" type="button" aria-label="Скопировать" data-tip="Скопировать">&#10697;</button>
         </div>
         <span class="fallback-hint">Не загружается? </span><a class="fallback-link" id="downloadWidget" href="https://raw.githubusercontent.com/Stepanchikkk/music-widget-obs/master/widget.html" download>Скачайте widget.html</a><span class="fallback-hint"> и укажите его в OBS как «Локальный файл»</span>
       </div>
@@ -465,6 +512,8 @@
     <a href="#" id="diagLink">Диагностика</a>
   </div>
 
-  <script src="popup.js"></script>
+  <div class="tip" id="tip" hidden></div>
+
+<script src="popup.js"></script>
 </body>
 </html>

@@ -15,6 +15,7 @@ const L10N = {
     sectionTitle3: '\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b WebSocket',
     stepsTitle: '\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 OBS',
     portLabel: '\u041f\u043e\u0440\u0442',
+    passLabel: 'Пароль',
     saveBtn: '\u041f\u0440\u0438\u043c\u0435\u043d\u0438\u0442\u044c \u0438 \u043f\u0435\u0440\u0435\u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u044c\u0441\u044f',
     statusConnected: 'WebSocket: \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d',
     statusDisconnected: 'WebSocket: \u043d\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0451\u043d',
@@ -31,6 +32,19 @@ const L10N = {
     waitingTrack: '\u0412\u043a\u043b\u0430\u0434\u043e\u043a \u0441 \u043c\u0435\u0434\u0438\u0430: {tabs}, \u043e\u0436\u0438\u0434\u0430\u043d\u0438\u0435 \u0442\u0440\u0435\u043a\u0430...',
     retryIn: ' \u2022 \u043f\u043e\u0432\u0442\u043e\u0440 \u0447\u0435\u0440\u0435\u0437 {secs}\u0441',
     styleTitle: '\u0421\u0442\u0438\u043b\u044c \u0432\u0438\u0434\u0436\u0435\u0442\u0430',
+   styleHelp: 'Чтобы закрепить стиль за конкретной сценой, скопируйте ссылку нужного стиля и вставьте её в адрес источника в OBS. Такой источник перестанет переключаться из расширения.',
+    styleHelpHint: 'Ссылка без стиля вернёт управление расширению.',
+    textHelp: 'Расширение записывает строку с треком в выбранный текстовый источник OBS. Шрифт, цвет, обводку и размер настраивайте в самом OBS — расширение меняет только текст.',
+    textHelpHint: 'Если у источника включено «Читать из файла», OBS игнорирует текст из расширения — галочку нужно снять. «Прокрутка» добавляет фильтр «MW Scroll».',
+   copyStyleTitle: 'Скопировать ссылку с этим стилем, если нужно закрепить его за сценой',
+   copyCurrentTitle: 'Скопировать ссылку с текущим стилем, если нужно закрепить его за сценой',
+   copyBaseTitle: 'Ссылка без стиля — вернуть управление расширению',
+    baseLinkRow: 'Ссылка без стиля',
+    copyBaseBtn: 'Скопировать базовую ссылку',
+    toastStyle: 'Ссылка скопирована. Источник с этой ссылкой больше не будет переключаться из расширения.',
+    toastBase: 'Базовая ссылка скопирована. Замените адрес в источнике, чтобы вернуть управление расширению.',
+    helpBtn: 'Справка',
+    diagLink: 'Диагностика',
     styleClassic: '\u041a\u043b\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043a\u0438\u0439',
     styleCompact: '\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439',
     styleGlass: '\u0421\u0442\u0435\u043a\u043b\u044f\u043d\u043d\u044b\u0439',
@@ -53,6 +67,7 @@ const L10N = {
     sectionTitle3: 'WebSocket Settings',
     stepsTitle: 'OBS Setup',
     portLabel: 'Port',
+    passLabel: 'Password',
     saveBtn: 'Apply & Reconnect',
     statusConnected: 'WebSocket: connected',
     statusDisconnected: 'WebSocket: disconnected',
@@ -69,6 +84,19 @@ const L10N = {
     waitingTrack: 'Media tabs: {tabs}, waiting for track...',
     retryIn: ' \u2022 retry in {secs}s',
     styleTitle: 'Widget Style',
+   styleHelp: 'To pin a style to a single scene, copy the link of the style you need and paste it into the OBS source URL. That source will stop following the extension.',
+    styleHelpHint: 'The link without a style returns control to the extension.',
+    textHelp: 'The extension writes the track line into the selected OBS text source. Font, color, outline and size are configured in OBS itself — the extension only changes the text.',
+    textHelpHint: 'If "Read from file" is enabled on the source, OBS ignores the text from the extension — turn it off. "Scrolling" adds the "MW Scroll" filter.',
+   copyStyleTitle: 'Copy the link with this style if you need to pin it to a scene',
+   copyCurrentTitle: 'Copy the link with the current style if you need to pin it to a scene',
+   copyBaseTitle: 'Link without a style — return control to the extension',
+    baseLinkRow: 'Link without a style',
+    copyBaseBtn: 'Copy the base link',
+    toastStyle: 'Link copied. A source with this link will no longer switch styles from the extension.',
+    toastBase: 'Base link copied. Replace the source URL to return control to the extension.',
+    helpBtn: 'Help',
+    diagLink: 'Diagnostics',
     styleClassic: 'Classic',
     styleCompact: 'Compact',
     styleGlass: 'Glass',
@@ -213,9 +241,24 @@ function applyLang() {
   const dl = document.getElementById('downloadWidget');
   if (dl) dl.textContent = T('downloadWidget');
   document.querySelector('.field-row label').textContent = T('portLabel');
+  const pwLabelEl = document.querySelector('.ws-pw-label');
+  if (pwLabelEl) pwLabelEl.textContent = T('passLabel');
   saveBtn.textContent = T('saveBtn');
   langSwitch.textContent = lang === 'ru' ? 'EN' : 'RU';
   document.getElementById('styleSectionTitle').textContent = T('styleTitle');
+  const styleHelpTextEl = document.getElementById('styleHelpText');
+  if (styleHelpTextEl) styleHelpTextEl.textContent = T('styleHelp');
+  const styleHelpHintEl = document.getElementById('styleHelpHint');
+  if (styleHelpHintEl) styleHelpHintEl.textContent = T('styleHelpHint');
+  const textHelpTextEl = document.getElementById('textHelpText');
+  if (textHelpTextEl) textHelpTextEl.textContent = T('textHelp');
+  const textHelpHintEl = document.getElementById('textHelpHint');
+  if (textHelpHintEl) textHelpHintEl.textContent = T('textHelpHint');
+  const textHelpBtnEl = document.getElementById('textHelpBtn');
+  if (textHelpBtnEl) textHelpBtnEl.setAttribute('aria-label', T('helpBtn'));
+  if (copyBaseBtn) copyBaseBtn.textContent = T('copyBaseBtn');
+  if (styleHelpBtn) styleHelpBtn.setAttribute('aria-label', T('helpBtn'));
+  if (copyStyleLinkBtn) { copyStyleLinkBtn.setAttribute('data-tip', T('copyCurrentTitle')); copyStyleLinkBtn.setAttribute('aria-label', T('copyCurrentTitle')); }
   buildStyleOptions();
 }
 
@@ -224,9 +267,9 @@ if (copyWidgetBtn) {
   copyWidgetBtn.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(WIDGET_URL);
-      copyWidgetBtn.title = T('copied');
+      copyWidgetBtn.setAttribute('data-tip', T('copied'));
       copyWidgetBtn.setAttribute('aria-label', T('copied'));
-      setTimeout(() => { copyWidgetBtn.title = T('copyWidget'); copyWidgetBtn.setAttribute('aria-label', T('copyWidget')); }, 1500);
+      setTimeout(() => { copyWidgetBtn.setAttribute('data-tip', T('copyWidget')); copyWidgetBtn.setAttribute('aria-label', T('copyWidget')); }, 1500);
     } catch (e) {}
   });
 }
@@ -536,10 +579,157 @@ textSepOptions.addEventListener('click', (e) => {
   updateTextFormatUI();
 });
 
+const tipEl = document.getElementById('tip');
+let tipTarget = null;
+
+function positionTip() {
+  if (!tipTarget || !tipEl) return;
+  const r = tipTarget.getBoundingClientRect();
+  const tw = tipEl.offsetWidth;
+  const th = tipEl.offsetHeight;
+  const vw = document.documentElement.clientWidth;
+  const vh = window.innerHeight;
+  let left = r.left + r.width / 2 - tw / 2;
+  left = Math.max(8, Math.min(left, vw - tw - 8));
+  let top = r.top - th - 6;
+  if (top < 8) top = r.bottom + 6;
+  if (top + th > vh - 8) top = Math.max(8, r.top - th - 6);
+  if (top + th > vh - 8) top = Math.max(8, vh - th - 8);
+  tipEl.style.left = left + 'px';
+  tipEl.style.top = top + 'px';
+}
+
+function showTip(target) {
+  const text = target.getAttribute('data-tip');
+  if (!text || !tipEl) return;
+  tipTarget = target;
+  tipEl.textContent = text;
+  tipEl.hidden = false;
+  positionTip();
+  tipEl.classList.add('show');
+}
+
+function hideTip() {
+  if (!tipEl) return;
+  tipEl.classList.remove('show');
+  tipEl.hidden = true;
+  tipTarget = null;
+}
+
+document.addEventListener('mouseover', (e) => {
+  const t = e.target.closest('[data-tip]');
+  if (t && t !== tipTarget) showTip(t);
+});
+document.addEventListener('mouseout', (e) => {
+  const t = e.target.closest('[data-tip]');
+  if (t && t === tipTarget && !t.contains(e.relatedTarget)) hideTip();
+});
+document.addEventListener('focusin', (e) => {
+  const t = e.target.closest('[data-tip]');
+  if (t) showTip(t);
+});
+document.addEventListener('focusout', hideTip);
+window.addEventListener('scroll', positionTip, true);
+window.addEventListener('resize', positionTip);
+
+function legacyCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.top = '-1000px';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  ta.remove();
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text).catch(() => legacyCopy(text));
+  }
+  return Promise.resolve(legacyCopy(text));
+}
+
+let toastTimer = null;
+function showToast(text) {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+function copyStyleLink(styleId) {
+  copyToClipboard(WIDGET_URL + '?style=' + encodeURIComponent(styleId))
+    .then(() => showToast(T('toastStyle')))
+    .catch(() => {});
+}
+
+function copyBaseLink() {
+  copyToClipboard(WIDGET_URL)
+    .then(() => showToast(T('toastBase')))
+    .catch(() => {});
+}
+
+const copyStyleLinkBtn = document.getElementById('copyStyleLink');
+if (copyStyleLinkBtn) copyStyleLinkBtn.addEventListener('click', () => copyStyleLink(currentStyle));
+
+const copyBaseBtn = document.getElementById('copyBaseLink');
+if (copyBaseBtn) copyBaseBtn.addEventListener('click', () => copyBaseLink());
+
+function bindHelp(btnId, boxId) {
+  const btn = document.getElementById(btnId);
+  const box = document.getElementById(boxId);
+  if (!btn || !box) return;
+  let pinned = false;
+  let timer = null;
+  const show = () => {
+    clearTimeout(timer);
+    box.classList.remove('help-pop-up');
+    box.hidden = false;
+    const r = box.getBoundingClientRect();
+    if (r.bottom > window.innerHeight - 8) box.classList.add('help-pop-up');
+  };
+  const hide = () => { if (!pinned) box.hidden = true; };
+  const scheduleHide = () => { clearTimeout(timer); timer = setTimeout(hide, 160); };
+  btn.addEventListener('mouseenter', show);
+  btn.addEventListener('mouseleave', scheduleHide);
+  box.addEventListener('mouseenter', show);
+  box.addEventListener('mouseleave', scheduleHide);
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    pinned = !pinned;
+    box.hidden = !pinned;
+  });
+  document.addEventListener('click', (e) => {
+    if (!pinned) return;
+    if (box.contains(e.target) || btn.contains(e.target)) return;
+    pinned = false;
+    box.hidden = true;
+  });
+}
+
+bindHelp('styleHelpBtn', 'styleHelp');
+bindHelp('textHelpBtn', 'textHelp');
+
 function buildStyleOptions() {
   styleOptions.innerHTML = STYLES.map(s =>
-    `<div class="style-option${s.id === currentStyle ? ' active' : ''}" data-style="${s.id}">${T(s.key)}</div>`
-  ).join('');
+    '<div class="style-option' + (s.id === currentStyle ? ' active' : '') + '" data-style="' + s.id + '">' +
+      '<span>' + T(s.key) + '</span>' +
+      '<button class="style-copy" type="button" data-copy-style="' + s.id + '" data-tip="' + T('copyStyleTitle') + '" aria-label="' + T('copyStyleTitle') + '">&#10697;</button>' +
+    '</div>'
+  ).join('') +
+  '<div class="style-option style-option-base" data-copy-base="1">' +
+    '<span>' + T('baseLinkRow') + '</span>' +
+    '<button class="style-copy" type="button" data-copy-base="1" data-tip="' + T('copyBaseTitle') + '" aria-label="' + T('copyBaseTitle') + '">&#10697;</button>' +
+  '</div>';
   const label = STYLES.find(s => s.id === currentStyle);
   styleSummary.textContent = label ? T(label.key) : currentStyle;
   applyPreviewStyle(currentStyle);
@@ -584,8 +774,21 @@ chrome.storage.local.get({ widgetStyle: 'classic' }, (items) => {
 });
 
 styleOptions.addEventListener('click', (e) => {
+  const copyRow = e.target.closest('[data-copy-style]');
+  if (copyRow) {
+    e.stopPropagation();
+    copyStyleLink(copyRow.getAttribute('data-copy-style'));
+    styleDropdown.open = false;
+    return;
+  }
+  if (e.target.closest('[data-copy-base]')) {
+    e.stopPropagation();
+    copyBaseLink();
+    styleDropdown.open = false;
+    return;
+  }
   const opt = e.target.closest('.style-option');
-  if (!opt) return;
+  if (!opt || !opt.dataset.style) return;
   const style = opt.dataset.style;
   if (style === currentStyle) { styleDropdown.open = false; return; }
   currentStyle = style;
