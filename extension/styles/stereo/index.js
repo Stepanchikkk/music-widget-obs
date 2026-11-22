@@ -1,6 +1,8 @@
 (function(){
+var BASE = (function(){ var s = document.currentScript; return s && s.src ? s.src.replace(/[^/]*$/, '') : ''; })();
+var link = document.createElement('link'); link.rel = 'stylesheet'; link.href = BASE + 'style.css'; document.head.appendChild(link);
 var S = window.__STYLES = window.__STYLES || {};
-var display = null, styleEl = null, resizeHandler = null, rAF = null;
+var display = null, resizeHandler = null, rAF = null;
 var IMG_W = 1448, IMG_H = 482;
 var DX = 316, DY = 185, DW = 1362 - 323, DH = 312 - 185;
 
@@ -73,10 +75,6 @@ function segShow(text) {
 S.stereo = {
     init: function() {
         widget.classList.add('stereo');
-        styleEl = document.createElement('style');
-        var P = location.protocol === 'chrome-extension:' ? '' : 'extension/';
-        styleEl.textContent = '@font-face{font-family:\'Digital Cyrillic\';src:url(' + P + 'digital-cyrillic.otf)format(\'opentype\')}.stereo{background:url(' + P + 'stereo-bg.png)center/contain no-repeat!important;border:none!important;box-shadow:none!important;text-shadow:none!important;border-radius:0!important;animation:none!important;transition:none!important}.stereo .stereo-display{position:absolute;font-family:\'Digital Cyrillic\',monospace;color:#ff2020;text-shadow:0 0 12px rgba(255,0,0,0.9),0 0 4px rgba(200,0,0,0.6);z-index:10;display:flex;align-items:center;justify-content:flex-start;padding:0 1%;letter-spacing:0;white-space:pre;overflow:hidden}';
-        document.head.appendChild(styleEl);
         display = document.createElement('div');
         display.className = 'stereo-display';
         widget.appendChild(display);
@@ -91,7 +89,6 @@ S.stereo = {
         segStop();
         lastText = '';
         widget.classList.remove('stereo');
-        if (styleEl) { styleEl.remove(); styleEl = null; }
         if (display) { display.remove(); display = null; }
         if (resizeHandler) { window.removeEventListener('resize', resizeHandler); resizeHandler = null; }
         if (rAF) { cancelAnimationFrame(rAF); rAF = null; }

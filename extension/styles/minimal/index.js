@@ -1,6 +1,8 @@
 (function(){
+var BASE = (function(){ var s = document.currentScript; return s && s.src ? s.src.replace(/[^/]*$/, '') : ''; })();
+var link = document.createElement('link'); link.rel = 'stylesheet'; link.href = BASE + 'style.css'; document.head.appendChild(link);
 var S = window.__STYLES = window.__STYLES || {};
-var E = null, styleEl = null, nodes = null;
+var E = null, nodes = null;
 
 function setupMarquee(el, text, gen) {
     if (!text) { el.innerHTML = ''; el.classList.remove('active'); el.style.transform = ''; return; }
@@ -67,9 +69,6 @@ S.minimal = {
     init: function() {
         widget.classList.remove('minimal-status');
         widget.classList.add('minimal');
-        styleEl = document.createElement('style');
-        styleEl.textContent = '.minimal{background:transparent!important;border:none!important;box-shadow:none!important;font-family:\"Segoe UI\",Arial,sans-serif}.minimal .artwork-wrap{display:none!important}.minimal .track-album-wrap{display:none!important}.minimal .timing{display:none!important}.minimal .controls{display:none!important}.minimal .progress-wrap{display:none!important}.minimal .track-info{display:flex;flex:1;min-width:0}.minimal .track-info-text{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;padding:0 calc(4vh);overflow:hidden}.minimal .track-title-wrap,.minimal .track-artist-wrap{min-width:0;max-width:100%;white-space:nowrap;position:relative}.minimal .track-title{font-size:calc(50vh);line-height:1.2;font-weight:700;color:#fff;white-space:nowrap}.minimal .track-artist{font-size:calc(33vh);line-height:1.2;font-weight:500;color:rgba(255,255,255,0.7);white-space:nowrap}.minimal .marquee-inner{display:inline-block;will-change:transform}.minimal .marquee-inner.active{animation:marquee var(--marquee-duration,12s) linear 1 forwards}.minimal .marquee-inner span{display:inline-block;padding-right:3em}.minimal.minimal-status .track-artist-wrap{display:none!important}.minimal.minimal-status .track-title{text-align:center}.minimal.minimal-status .track-info-text{padding:0}.minimal.minimal-status .marquee-inner span{padding-right:0}@keyframes marquee{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(-50%,0,0)}}';
-        document.head.appendChild(styleEl);
         var d = document.createElement('div');
         d.innerHTML = '<div class="track-info"><div class="track-info-text"><div class="track-title-wrap"><div class="track-title"><div class="marquee-inner"></div></div></div><div class="track-artist-wrap"><div class="track-artist"><div class="marquee-inner"></div></div></div></div></div>';
         nodes = [];
@@ -78,7 +77,6 @@ S.minimal = {
     },
     destroy: function() {
         widget.classList.remove('minimal', 'minimal-status');
-        if (styleEl) { styleEl.remove(); styleEl = null; }
         if (nodes) { nodes.forEach(function(c){if(c.parentNode)c.remove()}); nodes = null; }
         E = null;
     },

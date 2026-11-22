@@ -1,0 +1,54 @@
+.vinyl { background: transparent !important; border: none !important; box-shadow: none !important; font-family: "Segoe UI", Arial, sans-serif; }
+
+.vinyl .vn-wrap { display: flex; align-items: center; justify-content: center; gap: 4vh; flex: 1 1 100%; width: 100%; height: 100%; padding: 2vh; box-sizing: border-box; }
+
+.vinyl .vn-disc { position: relative; width: min(88vh, 40vw); height: min(88vh, 40vw); flex: none; filter: drop-shadow(0 1.2vh 3vh rgba(0, 0, 0, 0.55)); }
+
+.vinyl .vn-rotor { position: absolute; inset: 0; background: url('vinyl-disc.webp') center / contain no-repeat; animation: vnSpin 8s linear infinite; animation-play-state: paused; }
+
+.vinyl.playing .vn-rotor { animation-play-state: running; }
+
+.vinyl .vn-label { position: absolute; left: 50%; top: 50%; width: 34%; height: 34%; margin: -17% 0 0 -17%; border-radius: 50%; object-fit: cover; display: none; }
+.vinyl .vn-label.on { display: block; }
+
+.vinyl .vn-hole { position: absolute; left: 50%; top: 50%; width: 2.4%; height: 2.4%; margin: -1.2% 0 0 -1.2%; border-radius: 50%; background: #0b0b0e; }
+
+.vinyl .vn-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    conic-gradient(from 14deg at 50% 50%,
+      rgba(255, 255, 255, 0) 0deg,
+      rgba(255, 255, 255, 0.12) 26deg,
+      rgba(255, 255, 255, 0) 52deg,
+      rgba(255, 255, 255, 0) 180deg,
+      rgba(255, 255, 255, 0.12) 206deg,
+      rgba(255, 255, 255, 0) 232deg),
+    radial-gradient(circle at 68% 32%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 32%),
+    radial-gradient(circle at 32% 68%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 32%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0 17%, #000 19%);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 0 17%, #000 19%);
+}
+
+.vinyl .vn-body { flex: 0 0 auto; width: fit-content; max-width: 56%; min-width: 0; display: flex; flex-direction: column; gap: 1vh; }
+.vinyl .vn-title-wrap { width: 100%; overflow: hidden; white-space: nowrap; }
+.vinyl .vn-title { display: inline-block; }
+.vinyl .vn-title.active { animation: vnMarquee var(--marquee-duration, 12s) linear 1 forwards; }
+.vinyl .vn-title span { display: inline-block; }
+.vinyl .vn-title.active span { padding-right: 3em; }
+.vinyl .vn-title, .vinyl .vn-title span { font-size: 9vh; font-weight: 700; color: #fff; white-space: nowrap; line-height: 1.34; text-shadow: 0 0.3vh 1.2vh rgba(0, 0, 0, 0.65); }
+.vinyl .vn-artist { font-size: 6vh; color: rgba(255, 255, 255, 0.78); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0.2vh 1vh rgba(0, 0, 0, 0.6); }
+.vinyl .vn-bar { margin-top: 2vh; height: 0.7vh; min-height: 1px; background: rgba(255, 255, 255, 0.22); border-radius: 99px; overflow: hidden; }
+.vinyl .vn-fill { height: 100%; width: 0%; background: #fff; transition: width 0.6s linear; }
+.vinyl .vn-status { font-size: 7vh; color: rgba(255, 255, 255, 0.8); text-shadow: 0 0.3vh 1.2vh rgba(0, 0, 0, 0.6); }
+
+.vinyl.v .vn-wrap { flex-direction: column; gap: 2vh; padding: 2vh; }
+.vinyl.v .vn-disc { width: min(62vw, 62vh); height: min(62vw, 62vh); }
+.vinyl.v .vn-body { width: 100%; max-width: 100%; flex: none; text-align: center; }
+.vinyl.v .vn-title { font-size: 6vh; }
+.vinyl.v .vn-artist { font-size: 4.4vh; }
+
+@keyframes vnSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes vnMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }

@@ -1,0 +1,58 @@
+.blur { border: none !important; box-shadow: none !important; background: transparent !important; font-family: "Segoe UI", Arial, sans-serif; }
+
+.blur .bl-wrap { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 2vh; box-sizing: border-box; }
+
+.blur .bl-art { position: relative; z-index: 2; height: 100%; aspect-ratio: 1; flex: none; border-radius: 12vh; overflow: hidden; background: rgba(255, 255, 255, 0.06); box-shadow: 0 2.2vh 5.5vh rgba(0, 0, 0, 0.85), 0 0.6vh 1.6vh rgba(0, 0, 0, 0.6), inset 0 0 0 0.12vh rgba(255, 255, 255, 0.14); }
+.blur .bl-art::after,
+.blur .bl-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: max(0.9px, 0.32vh);
+  pointer-events: none;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 30%, rgba(255, 255, 255, 0) 52%, rgba(0, 0, 0, 0.32) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: 5;
+}
+.blur.h .bl-panel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 7vh;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.28) 45%, rgba(0, 0, 0, 0) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+.blur .bl-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.blur .bl-img.on { display: block; }
+
+.blur .bl-panel { position: relative; flex: none; height: 72%; margin-left: -2vh; border-radius: 0 12vh 12vh 0; overflow: hidden; display: flex; align-items: center; container-type: size; box-shadow: 0 1.2vh 3vh rgba(0, 0, 0, 0.55), inset 0 0 0 0.12vh rgba(255, 255, 255, 0.09); }
+.blur .bl-bg { position: absolute; inset: -15%; width: 130%; height: 130%; object-fit: cover; filter: blur(3.4vh) saturate(1.2) brightness(0.55); display: none; }
+.blur .bl-bg.on { display: block; }
+.blur .bl-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.3) 60%, rgba(0, 0, 0, 0.5) 100%); }
+
+.blur .bl-body { position: relative; z-index: 2; min-width: 0; width: 100%; padding: 0 3vh 0 5vh; display: flex; flex-direction: column; gap: 0.4vh; }
+.blur .bl-title-wrap { width: 100%; overflow: hidden; white-space: nowrap; }
+.blur .bl-title { display: inline-block; }
+.blur .bl-title.active { animation: blMarquee var(--marquee-duration, 12s) linear 1 forwards; }
+.blur .bl-title span { display: inline-block; }
+.blur .bl-title.active span { padding-right: 3em; }
+.blur .bl-title, .blur .bl-title span { font-size: 36cqh; font-weight: 700; color: #fff; white-space: nowrap; line-height: 1.34; letter-spacing: -0.01em; text-shadow: 0 0.3vh 1.4vh rgba(0, 0, 0, 0.75); }
+.blur .bl-artist { font-size: 20cqh; color: rgba(255, 255, 255, 0.72); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0.2vh 1vh rgba(0, 0, 0, 0.7); }
+.blur .bl-status { font-size: 9vh; color: rgba(255, 255, 255, 0.85); text-shadow: 0 0.3vh 1.2vh rgba(0, 0, 0, 0.6); }
+
+
+.blur.v .bl-wrap { flex-direction: column; justify-content: center; align-items: center; gap: 0; padding: 0; }
+.blur.v .bl-art { width: min(50vw, 50vh); height: min(50vw, 50vh); border-radius: 10vh; z-index: 2; box-shadow: 0 2.4vh 6vh rgba(0, 0, 0, 0.85), 0 0.6vh 1.8vh rgba(0, 0, 0, 0.6), inset 0 0 0 0.15vh rgba(255, 255, 255, 0.16); box-shadow: 0 1.6vh 3.4vh rgba(0, 0, 0, 0.65), inset 0 0 0 0.15vh rgba(255, 255, 255, 0.16); }
+.blur.v .bl-panel { width: 100vw; height: auto; flex: none; margin: -8vh 0 0; border-radius: 12vh; padding: 9.5vh 2.4vh 2.2vh; z-index: 1; container-type: normal; box-shadow: 0 1.2vh 3vh rgba(0, 0, 0, 0.5), inset 0 0 0 0.12vh rgba(255, 255, 255, 0.08); }
+.blur.v .bl-scrim { background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.65) 100%); }
+.blur.v .bl-body { padding: 0 2.4vh; text-align: center; }
+.blur.v .bl-title, .blur.v .bl-title span { font-size: 8vh; }
+.blur.v .bl-artist { font-size: 5.4vh; }
+
+@keyframes blMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
